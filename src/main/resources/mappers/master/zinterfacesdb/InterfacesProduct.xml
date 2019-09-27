@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao">
+
+<!-- 브랜드 수신용(현재 샘플테이블이 완료처리된 값으로 들어가있어 배치 돌아갈시 수정 예정) -->
+<!-- 중간계 샘플 데이터에 상태값(WorkDiv)이 완료처리 상태로 들어가 있음 추후 실데이터사용시 수정 필요 -->
+	<select id="selectErpBrand" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesBrandToErp" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesBrandToErp">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.selectErpBrand [중간계 브랜드 추가 수신][김영진] */	   
+		SELECT	 	BRANDNM  brandNm,	
+          	 		BRANDCD  brandCd,
+        			'N'	useYn			
+        FROM link_inetopendb.inetopen.IF_BRAND
+        WHERE ErrorStatus = '0'
+        AND WorkDiv = '1' 
+
+	</select>
+	
+<!-- 	 A -->
+	<insert id="insertBrandBatch" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesBrandToErp">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.insertBrandBatch [중간계 신규 브랜드 DP_BRAND로 INSERT][김영진] */
+		insert into dp_brand (
+			brand_no
+			,brand_name
+			,brand_en_name
+			,BRAND_GROUP_NO_TEXT
+			,use_Yn
+			,rgster_no
+			,rgst_dtm
+			)values(
+			#{brandCd}
+			,#{brandNm}
+			,#{brandNm}
+			,#{brandCd}
+			,#{useYn}
+			,'배치테스트'
+			,SYSDATE
+			)
+	</insert>
+	
+	<!--  
+	 <update id="updateBrandBatch" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesBrandToErp">
+	 	UPDATE DP_BRAND
+	 	SET BRAND_NO = #{brandCd}
+	 		,BRAND_NAME = #{brandNm}
+	 		,BRAND_EN_NAME = #{brandNm}
+	 		,BRAND_GROUP_NO_TEXT = #{brandCd}
+	 		,USE_YN = #{useYn}
+	 		,RGSTER_NO = '배치테스트'
+	 		,RGST_DTM = SYSDATE
+	 	WHERE PRDT_NO = #{brandCd}
+	 	AND	  BRAND_GROUP_NO_TEXT = #{brandCd}
+	 </update>
+	  -->
+	 
+	<!-- 상품마스터 테이블 가격 업데이트 항목 to-be에선 마스터테이블에 가격정보를 따로 저장하지않음 -->
+	<select id="selectErpGamGa" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesGamGaToErp" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesGamGaToErp">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.selectErpGamGa [중간계 가격정보 수신][김영진] */	
+		SELECT 	 strymd
+				,stpymd
+				,mgamt
+				,gamgaamt
+				,maejangCd
+				,'10' as staff
+				,spgb
+				,TO_NUMBER((MgAmt - GamGaAmt) / MgAmt *100) as onlinerate
+        FROM link_inetopendb.inetopen.if_gamga 
+        WHERE cbcd = 'AI'
+		AND MaejangCd = #{maejangCd}  <!-- cj상품 사방넷 유무에 따라  '0220' 등록 -->
+        AND substring(sangpumfullcd, 1, 7) = #{sangpumCd}
+        AND ErrorStatus = '0'
+        AND WorkDiv in ('0', '1') <!-- 중간계 샘플 데이터에 상태값(WorkDiv)이 완료처리 상태로 들어가 있음 추후 실데이터사용시 수정 필요 -->
+        GROUP BY  strymd, stpymd, mgamt, gamgaamt, maejangCd, spgb
+	</select>
+
+	<!--재고정보 수신용  -->
+	
+	<select id="selectErpStock" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesStockToErp" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesStockToErp">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.selectErpStock [중간계 재고정보 수신][김영진] */
+		 SELECT	   cbcd
+             	   ,maejangCd
+              	   ,substring(sangpumfullcd,1,7)sangpumCd
+             	   ,sangpumfullCd
+            	   ,Qty qty
+            	   ,inputType
+            	   ,regDate
+            	   ,conDate
+            	   ,errorStatus
+            	   ,workDiv
+         FROM link_inetopendb.inetopen.IF_STOCK_WMS
+       	 WHERE cbcd = 'AI'
+         AND ErrorStatus = '0'
+         AND workDiv in ('0','1')  <!-- 중간계 샘플 데이터에 상태값(WorkDiv)이 완료처리 상태로 들어가 있음 추후 실데이터사용시 수정 필요 -->
+         AND maejangCd = #{maejangCd}  <!-- cj상품 사방넷 유무에 따라  '0220' 등록 -->
+         AND inputType = #{inputType}<!-- 상태값 "9" 고정 -->
+         AND substring(sangpumfullcd,1,7) = #{sangpumCd}
+         Union All
+      	 SELECT	cbcd
+             	,maejangCd
+             	,substring(sangpumfullcd,1,7)sangpumCd
+            	,sangpumfullCd
+				,Qty qty
+				,inputType
+             	,regDate
+             	,conDate
+             	,errorStatus
+             	,workDiv
+      	FROM link_inetopendb.inetopen.IF_STOCK_ARS
+        WHERE cbcd in ('AS', 'AW')
+        AND ErrorStatus = '0'
+        AND workDiv in ('0','1')   
+        AND inputType = #{inputType}
+		AND maejangCd = #{maejangCd}
+        AND substring(sangpumfullcd,1,7) = #{sangpumCd}
+         
+	</select>
+	
+	<!-- 상품정보 리스트 수신 (현재 샘플테이블이 완료처리된 값으로 들어가있어 배치 돌아갈시 수정 예정)-->
+<!-- 	
+	<select id="selectErpSangPum" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSangPumToErp" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSangPumToErp">
+		SELECT DISTINCT
+             	  MaejangCd        	    maejangCd
+			 	, SangPumCd          	sangPumCd
+			 	, SangPumNm				sangPumNm
+			 	, BrandNm				brandNm
+			 	, RegDate				regDate
+		FROM link_inetopendb.inetopen.IF_SANGPUM
+        WHERE 1=1
+        AND MaejangCd in ('0072', '9999', '0318') cj상품 사방넷 유무에 따라  '0220' 등록
+		AND WorkDiv = '2' 중간계 샘플 데이터에 상태값(WorkDiv)이 완료처리 상태로 들어가 있음 추후 실데이터사용시 수정 필요
+        AND ErrorStatus = '0'
+        AND SangPumDiv != 'FF000000'
+		AND WMS IS NOT NULL
+		AND Abcmart IS NOT NULL
+	</select>
+	 -->
+	 
+	 <!-- 상품승인대상 리스트 조회 -->
+	<select id="selectErpSangPumPaging" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSangPumToErp" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSangPumToErp">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.selectErpSangPum [중간계 상품정보 수신 (재고,가격정보) 포함][김영진] */
+			SELECT  DISTINCT 
+				A.CBCd				cbcd
+      			,A.MaejangCd		maejangCd
+      			,A.SangPumCd		sangPumCd
+      			,A.SangPumNm		sangPumNm
+      			,A.BrandCd			brandCd
+      			,A.BrandNm			brandNm
+      			,A.SangPumDiv		sangPumDiv
+      			,A.RegDate			regDate
+ 	 	FROM link_inetopendb.inetopen.if_SANGPUM A
+		LEFT OUTER JOIN Link_inetopendb.inetopen.IF_STOCK_WMS B ON SUBSTRING(B.SangPumFullCd,1,7) = SUBSTRING(A.SangPumFullCd,1,7) 
+		LEFT OUTER JOIN Link_inetopendb.inetopen.IF_STOCK_ARS C ON SUBSTRING(C.SangPumFullCd,1,7) = SUBSTRING(B.SangPumFullCd,1,7)
+		<include refid="selectErpSangPumListSearchWhere"></include>
+		order by  A.SangPumCd 
+		<include refid="Paging.mssql"></include>
+	</select>
+	<!-- 
+	SELECT DISTINCT
+				  A.CBCD			cbcd
+             	, A.MaejangCd		maejangCd
+			 	, A.SangPumCd		sangPumCd
+				, A.SangPumFullCd	sangPumFullCd
+			 	, A.SangPumNm		sangPumNm
+			 	, A.BrandNm			brandNm
+			 	, A.RegDate			regDate
+				, B.strymd			strymd
+				, B.stpymd			stpymd
+				, B.mgamt			mgamt
+				, B.gamgaamt		gamgaamt
+				, '10' as staff		
+				, B.spgb
+				, NVL(C.Qty,0)as wmsQty
+				, C.RegDate wmsRegDate
+				, C.ConDate wmsConDate
+				, NVL(D.Qty,0)as arsQty
+				, D.RegDate arsRegDate
+				, D.ConDate arsConDate
+				, D.CBCd arsCBCd
+		FROM link_inetopendb.inetopen.IF_SANGPUM A
+		JOIN Link_inetopendb.inetopen.IF_GAMGA B ON B.SangPumFullCd = A.SangPumFullCd
+		FULL OUTER JOIN Link_inetopendb.inetopen.IF_STOCK_WMS C ON C.SangPumFullCd = B.SangPumFullCd 
+		FULL OUTER JOIN Link_inetopendb.inetopen.IF_STOCK_ARS D ON D.SangPumFullCd = C.SangPumFullCd  
+		WHERE 1=1
+		AND (NVL(C.Qty,0) > 0 
+		OR NVL(D.Qty,0) > 0)
+        AND A.MaejangCd in ('0072', '9999', '0318')
+		AND A.WorkDiv = '2'
+        AND A.ErrorStatus = '0'
+        AND A.SangPumDiv != 'FF000000'
+		AND A.WMS IS NOT NULL
+		AND A.Abcmart IS NOT NULL
+		AND B.WorkDiv = '1'
+		 -->
+	<!-- 조회 검색 조건 -->
+	<sql id="selectErpSangPumListSearchWhere">
+		WHERE 1=1
+		AND (NVL(B.Qty,0) > 0 OR NVL(C.Qty,0) > 0)
+ 		AND A.MaejangCd in ('0072','0318','9999')
+ 		AND A.WorkDiv in ('2') 
+        AND A.ErrorStatus = '0'
+        AND A.SangPumDiv != 'FF000000'
+		AND A.WMS IS NOT NULL
+		AND A.Abcmart IS NOT NULL
+		<!-- 상품 이름 조건 검색 -->
+	<if test='bean.sangPumNm != null and bean.sangPumNm != ""'>
+		AND	A.SangPumNm LIKE '%' || #{bean.sangPumNm} || '%'
+	</if>
+		<!-- 상품 코드 조건 검색  -->
+	<if test="bean.sangPumCdList !=null"> 
+         AND A.SangPumCd in
+         <foreach collection="bean.sangPumCdList" item="item" index="index"  open="(" separator="," close=")">
+               #{item}
+      </foreach>
+   </if>
+	
+		<!-- 브랜드 이름 조건 검색 -->
+	<if test='bean.brandNm != null and bean.brandNm != ""'>
+		AND A.BrandNm Like '%' || #{bean.brandNm} || '%'	
+	</if>
+		<!-- 시작일자 조건  -->
+	<if test='bean.regStartDate != null and bean.regStartDate != ""'>
+    	AND A.regDate <![CDATA[ >= ]]> TO_DATE(#{bean.regStartDate, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS')
+    </if>
+    	<!-- 종료일자 조건 regEndDate-->
+    <if test='bean.regEndDate != null and bean.regEndDate != ""'>
+    	AND A.regDate <![CDATA[ <= ]]> TO_DATE(#{bean.regEndDate, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS')
+    </if>
+    
+    </sql>
+	
+	<select id ="selectErpSangPumCount" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSangPumToErp" resultType="int">
+	select count(t.sangpumCd) as totalCount
+	from (
+		SELECT A.sangpumCd  
+		FROM link_inetopendb.inetopen.if_SANGPUM A
+		LEFT OUTER JOIN Link_inetopendb.inetopen.IF_STOCK_WMS B ON SUBSTRING(B.SangPumFullCd,1,7) = SUBSTRING(A.SangPumFullCd,1,7) 
+		LEFT OUTER JOIN Link_inetopendb.inetopen.IF_STOCK_ARS C ON SUBSTRING(C.SangPumFullCd,1,7) = SUBSTRING(B.SangPumFullCd,1,7)
+		<include refid="selectErpSangPumListSearchWhere"></include>
+		group by A.cbcd,A.MaejangCd,A.SangPumCd,A.ColorNm,A.BrandCd,A.BrandNm,A.SangPumDiv,A.SangPumNm
+	) t
+		</select>
+	
+	
+
+	<!-- 상품 옵션 수신  전체 리스트 단건조회(현재 샘플테이블이 완료처리된 값으로 들어가있어 배치 돌아갈시 수정 예정)-->
+	<select id="selectErpSangPumDetail" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSangPumDetailToErp" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSangPumDetailToErp">	
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.selectErpSangPumDetail [중간계 상품 상세정보 수신 ][김영진] */
+		SELECT  CBCd				cbcd
+      			,MaejangCd			maejangCd
+      			,SangPumFullCd 		sangPumFullCd
+      			,SangPumCd			sangPumCd
+      			,ColorNm			ColorNm
+      			,SizeCd				SizeCd
+      			,BarCode			BarCode
+      			,BarCode1			BarCode1
+      			,BarCode2			BarCode2
+      			,SangPumNm			SangPumNm
+      			,Style				Style
+      			,AKStyle			AKStyle
+      			,BrandCd			BrandCd
+      			,BrandNm			BrandNm
+      			,SangPumDiv			SangPumDiv
+      			,Sex				Sex
+      			,VendCd				VendCd
+      			,WonSanJi			WonSanJi
+      			,Kind				Kind	
+      			,Matt				Matt
+      			,color_online		coloronline
+      			,heelHeight			heelHeight
+      			,ManuFacturer		ManuFacturer
+      			,ManuFacturerCd		ManuFacturerCd
+      			,EnterDate			EnterDate	
+      			,Importer			Importer
+      			,UseFlag			UseFlag
+      			,BoxInQty			BoxInQty
+      			,RegDate			RegDate
+      			,WMS				WMS
+      			,Abcmart			Abcmart
+      			,OpenMarket			OpenMarket
+      			,ErrorStatus		ErrorStatus
+      			,WorkDiv			WorkDiv
+      			,First_Entry_Date	FirstEntryDate
+      			,Last_Entry_Date	LastEntryDate
+      			,TIER_FLAG			TIERFLAG
+ 	 	FROM link_inetopendb.inetopen.if_SANGPUM
+	 	WHERE SangPumCd = #{sangpumCd}
+ 		AND MaejangCd = #{maejangCd}
+ 		AND WorkDiv in ('2') 
+        AND ErrorStatus = '0'
+        AND SangPumDiv != 'FF000000'
+		AND WMS IS NOT NULL
+         ORDER BY SizeCd    
+	</select>
+	
+	
+		
+		
+<!-- 상품정보 리스트 수신 (현재 샘플테이블이 완료처리된 값으로 들어가있어 배치 돌아갈시 수정 예정)-->
+	
+	<select id="selectNonErpSangPum" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSangPumNotToErp" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSangPumNotToErp">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.selectNonErpSangPum [온라인 미등록 상품 조회][김영진] */
+		SELECT DISTINCT
+             	  MaejangCd        	    maejangCd
+			 	, SangPumCd          	sangPumCd
+			 	, SangPumNm				sangPumNm
+			 	, BrandNm				brandNm
+			 	, RegDate				regDate
+		FROM link_inetopendb.inetopen.IF_SANGPUM
+        WHERE 1=1
+        AND MaejangCd in ('0072', '9999', '0318') <!-- cj상품 사방넷 유무에 따라  '0220' 등록 -->
+		AND WorkDiv = '2' <!-- 중간계 샘플 데이터에 상태값(WorkDiv)이 완료처리 상태로 들어가 있음 추후 실데이터사용시 수정 필요 -->
+        AND ErrorStatus = '0'
+        AND SangPumDiv != 'FF000000'
+		AND WMS IS NOT NULL
+		AND Abcmart IS NULL
+	</select>
+	
+	
+	
+	
+	
+	<insert id="insertFreeGiftToErp" parameterType = "kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesInsertGiftForErp">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.insertFreeGiftToErp [중간계 IF_SANGPUM 사은품 정보 INSERT][김영진] */
+		INSERT INTO LINK_INETOPENDB.INETOPEN.IF_SANGPUM
+      	  (
+              CBCd
+            , MaejangCd
+            , SangPumFullCd
+            , SangPumCd
+            , ColorNm
+            , SizeCd
+            , BarCode
+            , BarCode1
+            , BarCode2
+            , SangPumNm
+            , Style
+            , AKStyle
+            , BrandCd
+            , BrandNm
+            , SangPumDiv
+            , Sex
+            , VendCd
+            , WonSanJi
+            , Kind
+            , Matt
+            , color_online
+            , heelHeight
+            , ManuFacturer
+            , ManuFacturerCd
+            , EnterDate
+            , Importer
+            , UseFlag
+            , BoxInQty
+            , RegDate
+            , WMS
+            , Abcmart
+            , OpenMarket
+            , ErrorStatus
+            , WorkDiv
+        )
+        SELECT
+              'AI'                                      
+            , '0072'                                    
+            , A.VNDR_PRDT_NO_TEXT || '001' || 'FFF'      
+            , A.VNDR_PRDT_NO_TEXT                      
+            , 'F'                                      
+            , 'FFF'                                     
+            , 'AK' || A.VNDR_PRDT_NO_TEXT || '001' || 'FFF' 
+            , NULL                                     
+            , NULL                                     
+            , A.ENG_PRDT_NAME                           
+            , 'GIFT'                                    
+            , 'GIFT'                                   
+            , '999999'                                 
+            , '사은품'                                    
+            , 'FF000000'                               
+            , 'F'                                       
+            , NULL                                      
+            , NULL                                     
+            , NULL                                    
+            , NULL                                     
+            , NULL                                      
+            , NULL                                      
+            , NULL                                        
+            , NULL                                      
+            , NULL                                      
+            , NULL                                      
+            , 1                                         
+            , 0                                         
+            , SYSDATE                                 
+            , NULL                                      
+            , NULL                                      
+            , NULL                                      
+            , 0                                         
+            , 0                                         
+          FROM PD_PRODUCT A
+         WHERE 1=1
+         AND STYLE_INFO = 'FREEGIFT'
+         AND MNFTR_NAME = 'ABCMart'
+         AND PRDT_NO = #{prdtNo}
+	</insert>
+ 
+ 
+ 
+ 
+<!-- erp 중간계 브랜드 프로시저 호출 -->
+
+	<update id="updateProcedureErpBrand" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesBrandForErp">	
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.updateProcedureErpBrand [중간계 IF_BRAND WORKDIV변경 프로시저 호출][김영진] */
+		EXEC link_inetopendb.inetopen.PR_PROCESS_BRAND #{brandCd}, #{workDiv}
+	</update>	
+
+<!-- erp 중간계 재고 프로시저 호출   -->
+	
+	<update id="updateProcedureErpStock" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesStockForErp">	
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.updateProcedureErpStock [중간계 IF_STOCK_WMS WORKDIV변경 프로시저 호출][김영진] */
+		exec link_inetopendb.inetopen.PR_PROCESS_STOCK_WMS_BY_FULLCODE #{maejangCd}, #{sangPumFullCd}, #{inputType}
+	</update>
+
+
+<!-- erp 중간계 상품 프로시저 호출   -->	
+
+	<update id="updateProcedureErpSangPum" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSangPumForErp">	
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.updateProcedureErpSangPum [중간계 IF_SANGPUM WORKDIV변경 프로시저 호출][김영진] */
+		EXEC link_inetopendb.inetopen.PR_PROCESS_SANGPUM_BY_PRDT_CODE #{maejangCd}, #{sangPumCd} 
+	</update>
+ 
+ <!-- erp 중간계 감가 프로시저 호출   -->
+	
+	<update id="updateProcedureErpGamGa" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesGamGaForErp">	
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.updateProcedureErpGamGa [중간계 IF_GAMGA WORKDIV변경 프로시저 호출][김영진] */
+		EXEC link_inetopendb.inetopen.PR_PROCESS_GAMGA_BY_PRDT_CODE #{maejangCd}, #{sangPumCd}
+	</update>
+
+ <!--중간계 재고 (ARS)쪽 프로시저 호출 (샘플) -->
+	<update id="updateProcedureArsStock" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesStockForArs">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesProductDao.updateProcedureArsStock [중간계 IF_STOCK_ARS WORKDIV변경 프로시저 호출][김영진] */
+		EXEC link_inetopendb.inetopen.PR_PROCESS_STOCK_ARS_BY_FULLCODE #{maejangCd}, #{sangPumFullCd}, #{orderCount}, #{cbcd}
+	</update>
+
+
+
+</mapper>

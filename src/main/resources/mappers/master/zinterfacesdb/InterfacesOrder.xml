@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesOrderDao">
+
+	<insert id="insertIforderToOpenDB">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesOrderDao.insertIforderToOpenDB [OPENDB의 IF_ORDER에 데이터 생성][백인천] */
+        INSERT INTO LINK_INETOPENDB.INETOPEN.IF_ORDER_ART (
+            CBCd,
+            MaejangCd,
+            OrdNo,
+            ItemSno,
+            OrdType,
+            OrdDt,
+            SumPakingRule,
+            OrdDp,
+            OldOrdNo,
+            NameOrder,
+            MobileOrder,
+            PhoneOrder,
+            MemberYn,
+            MemberId,
+            NameReceiver,
+            MobileReceiver,
+            PhoneReceiver,
+            Zipcode,
+            Address,
+            AddressDetail,
+            Email,
+            DeliMsg,
+            Memo,
+            AdminnMemo,
+            MallName,
+            MallOrdNo,
+            SettleKind,
+            PrnSettlePrice,
+            SettlePrice,
+            Enuri,
+            MemberDc,
+            Emoney1,
+            Emoney2,
+            Reserve1,
+            Reserve2,
+            Coupon1,
+            CouponNo1,
+            Coupon2,
+            CouponNo2,
+            Delivery,
+            DeliType,
+            BankCode,
+            BankAccount,
+            BankSender,
+            Vbank,
+            VAcount,
+            Cdt,
+            GoodsNo,
+            GoodsNm,
+            Opt1,
+            Opt2,
+            AddOpt,
+            Bacode,
+            TaxYn,
+            Ea,
+            Price,
+            Supply,
+            SumPakingKey,
+            PartDeliType,
+            PartDeliYn,
+            SangPumFullCd,
+            DeliveryCode,
+            DeliveryNo,
+            Ddt,
+            SelfDelivery,
+            SelfDeliveryRs,
+            ConfirmDt,
+            Confirm,
+            EscrowYn,
+            EscrowConfirm,
+            EscrowNo,
+            CashReceipt,
+            CancelBankCode,
+            CancelBankaccount,
+            CancelBackuser,
+            CancelCcDt,
+            CancelRfee,
+            OrdStatus,
+            PackingDt,
+            ReceiveDt,
+            DeliveryType,
+            BfCancelType,
+            RtReqType,
+            OutConfirmType,
+            PrgStatus,
+            Regdate,
+            Condate,
+            ErrorStatus,
+            WorkDiv,
+            Safe_key,
+            ARSWorkDiv,
+            ARSStatus,
+            ARSRecvDate,
+            ARSErrorStatus,
+            ORI_STORE_CD,
+            CONF_STORE_CD,
+            DeleveryStoreCD,
+            AddressChange,
+            PaymentStatus,
+            MoneyPaymentComplete,
+            off_zone_area_flag,
+            off_zone_area_cd,
+            SendBackReqDate,
+            SendBackResDate,
+            SendBackDeliveryNo
+        )
+        SELECT * FROM IF_ORDER
+	</insert>
+
+	<select id="getCvsPickupCountToOpenDB" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOrder" resultType="int">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesOrderDao.getCvsPickupCountToOpenDB [OPENDB의 편의점픽업 테이블에서 해당 주문번호의 주문건수를 카운트][백인천] */
+		SELECT 
+		   COUNT(ORDER_NUM)
+		FROM 
+		   LINK_INETOPENDB.INETOPEN.CVS_PICKUP WITH(NOLOCK) 
+		WHERE ORDER_NUM = #{orderNum}
+	</select>
+
+	<update id="updateOrderChangeAddr" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesReturnProcedureAddr">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesOrderClameDeliveryDao.updateOrderChangeAddr [주문 배송지 변경 프로시저 호출][김영진] */
+		EXEC link_inetopendb.inetopen.PR_ORDER_CHANGE_FOR_DLVY_ADDR 
+					#{cbcd}, 
+					#{maejangCd}, 
+					#{dlvyId}, 
+					#{newRcvrName}, 
+					#{newDlvyPostNum}, 
+					#{newHpNum}, 
+					#{newHpNum2}, 
+					#{newHpNum3}, 
+					#{newTelNum}, 
+					#{newTelNum2}, 
+					#{newTelNum3}, 
+					#{newAddr1}, 
+					#{newAddr2}, 
+					#{dlvyMessage}
+	</update>
+
+	
+	<update id="updateOrderChangeOptn" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesReturnProcedureOptn">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesOrderDao.updateOrderChangeOptn [주문 옵션 변경 프로시저 호출][김영진] */
+		EXEC link_inetopendb.inetopen.PR_ORDER_CHANGE_FOR_OPTION
+					#{cbcd},
+					#{maejangCd},
+					#{dlvyId},
+					#{itemSno},
+					#{sangPumFullCd1},
+					#{sangPumFullCd2}
+	</update>
+
+	<update id="updateOrderReturnProduct" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOrderReturnToWms">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesOrderDao.updateOrderReturnProduct [배송회수지시 프로시저 호출][김영진] */
+		EXEC link_inetopendb.inetopen.PR_ORDER_RETURN_PRODUCT #{cbcd}, #{maejangCd}, #{dlvyId}, #{asReturnConfirm}
+	</update>
+
+
+	<update id="updateOrderReturnProductPickUp" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOrderReturnToWms">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesOrderDao.updateOrderReturnProductPickUp [픽업배송회수지시 프로시저 호출][김영진] */
+		EXEC link_inetopendb.inetopen.PR_ORDER_RETURN_PRODUCT_PICKUP #{cbcd}, #{maejangCd}, #{dlvyId}, #{postNum}, #{addr}, #{addrDtl}, #{hdphnNum}, #{rcvrName}, #{prdtCode}, #{optionValue}
+	</update>
+	
+	<update id="updateOrderHold" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOrder">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesOrderDao.updateOrderReturnProductPickUp [주문 배송 중단 프로시저 호출][김영진] */
+		EXEC link_inetopendb.inetopen.PR_ORDER_HOLD #{CBCd}, #{MaejangCd}, #{dlvyId}
+	</update>
+
+
+</mapper>

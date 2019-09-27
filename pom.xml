@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>kr.co.shop</groupId>
+		<artifactId>common</artifactId>
+		<version>1.0</version>
+		<relativePath>../common/pom.xml</relativePath>
+	</parent>
+	
+    <artifactId>shop.interfaces</artifactId>
+    <version>1.0</version>
+   	<packaging>jar</packaging>
+   	
+    <dependencies>
+		<!-- log4jdbc-log4j2 -->
+		<dependency>
+			<groupId>org.bgee.log4jdbc-log4j2</groupId>
+			<artifactId>log4jdbc-log4j2-jdbc4</artifactId>
+			<version>1.16</version>
+		</dependency>
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+        </dependency>
+		<dependency>
+		    <groupId>org.mybatis.spring.boot</groupId>
+		    <artifactId>mybatis-spring-boot-starter</artifactId>
+		    <version>1.3.2</version>
+		</dependency>
+		<!-- KCP PG lib connection -->
+		<dependency>
+			<groupId>com.kcp.payment</groupId>
+		    <artifactId>kcp-connection</artifactId>
+		    <version>1.0.0</version>
+		    <scope>system</scope>
+		    <systemPath>${shop.common.path}/common/lib/ConnectionKCP.jar</systemPath>
+		</dependency>
+		<!-- KCP PG lib jppclie -->
+		<dependency>
+		    <groupId>com.kcp.payment</groupId>
+		    <artifactId>kcp-jppclie</artifactId>
+		    <version>1.0.0</version>
+		    <scope>system</scope>
+		    <systemPath>${shop.common.path}/common/lib/jPpcliE.jar</systemPath>
+		</dependency>
+		<!-- Nice giftcard posclient -->
+		<dependency>
+		    <groupId>com.nice.giftcard</groupId>
+		    <artifactId>pos-client</artifactId>
+		    <version>1.0.0</version>
+		    <scope>system</scope>
+		    <systemPath>${shop.common.path}/common/lib/nicepos_mega.jar</systemPath>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/commons-httpclient/commons-httpclient -->
+		<dependency>
+		    <groupId>commons-httpclient</groupId>
+		    <artifactId>commons-httpclient</artifactId>
+		    <version>3.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple -->
+		<dependency>
+		    <groupId>com.googlecode.json-simple</groupId>
+		    <artifactId>json-simple</artifactId>
+		    <version>1.1.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/commons-codec/commons-codec -->
+		<dependency>
+		    <groupId>commons-codec</groupId>
+		    <artifactId>commons-codec</artifactId>
+		    <version>1.12</version>
+		</dependency>
+		<dependency>
+			<groupId>com.thoughtworks.xstream</groupId>
+			<artifactId>xstream</artifactId>
+			<version>1.4.4</version>
+			<scope>system</scope>
+			<systemPath>${shop.common.path}/common/lib/xstream-1.4.4.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>com.google.firebase</groupId>
+			<artifactId>firebase-admin</artifactId>
+			<version>6.8.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.8.5</version>
+		</dependency>
+    </dependencies>
+    
+    <properties>
+    	<maven.test.skip>true</maven.test.skip>
+    </properties>
+    
+    <build>
+		<finalName>shop.interfaces</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<finalName>shop.interfaces</finalName>  
+					<outputDirectory>../common/lib</outputDirectory>
+				</configuration>
+		        <executions>
+		            <execution>
+		                <id>model-jar</id>
+		                <phase>package</phase>
+		                <goals>
+		                    <goal>jar</goal>
+		                </goals>
+		                <configuration>
+							<includes>
+								<include>kr/co/abcmart/interfaces/module/**/base/model/**</include>
+								<include>kr/co/abcmart/interfaces/module/**/model/**</include>
+							</includes>
+							<classifier>model</classifier>
+		                </configuration>
+		            </execution>
+		        </executions>
+            </plugin>
+			
+<!-- 			<plugin> -->
+<!--                 <groupId>org.apache.maven.plugins</groupId> -->
+<!--                 <artifactId>maven-jar-plugin</artifactId> -->
+<!-- 				<configuration> -->
+<!-- 					<finalName>shop.interfaces.model</finalName> -->
+<!-- 					<includes> -->
+<!-- 						<include>kr/co/abcmart/interfaces/module/**/base/model/**</include> -->
+<!-- 						<include>kr/co/abcmart/interfaces/module/**/model/**</include> -->
+<!-- 					</includes> -->
+<!-- 					<outputDirectory>../common/lib</outputDirectory> -->
+<!-- 				</configuration> -->
+<!--             </plugin> -->
+        </plugins>
+    </build>
+</project>

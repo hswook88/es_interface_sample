@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesClaimDao">
+	<update id="updateOrderPrdtNoGiftCancel" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesReturnProcedureCancel">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesClaimDao.updateOrderPrdtNoGiftCancel [상품 취소 프로시저 호출][김영진] */
+		EXEC link_inetopendb.inetopen.PR_ORDER_CANCEL_FOR_PART #{cbcd}, #{maejangCd}, #{dlvyId}, #{itemSno}, #{sangPumFullCd}, #{count}
+	</update>
+
+
+	<update id="updateOrderPrdtGiftCancel" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesReturnProcedureCancel">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesClaimDao.updateOrderPrdtGiftCancel [사은품을 포함한 상품 취소 프로시저 호출][김영진] */
+		EXEC link_inetopendb.inetopen.PR_ORDER_CANCEL_FOR_PART #{cbcd}, #{maejangCd}, #{dlvyId}, #{freeGiftItemSno}, #{sangPumFullCd}, #{count}
+	</update>
+</mapper>

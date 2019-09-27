@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesDeliveryDao">
+
+	<insert id="insertIforderToOpenDB">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesDeliveryDao.insertIforderToOpenDB [OPENDB의 IF_ORDER에 데이터 생성][백인천] */
+		INSERT INTO link_inetopendb.inetopen.IF_ORDER_ART (
+            CBCd,
+            MaejangCd,
+            OrdNo,
+            ItemSno,
+            OrdType,
+            OrdDt,
+            SumPakingRule,
+            OrdDp,
+            OldOrdNo,
+            NameOrder,
+            MobileOrder,
+            PhoneOrder,
+            MemberYn,
+            MemberId,
+            NameReceiver,
+            MobileReceiver,
+            PhoneReceiver,
+            Zipcode,
+            Address,
+            AddressDetail,
+            Email,
+            DeliMsg,
+            Memo,
+            AdminnMemo,
+            MallName,
+            MallOrdNo,
+            SettleKind,
+            PrnSettlePrice,
+            SettlePrice,
+            Enuri,
+            MemberDc,
+            Emoney1,
+            Emoney2,
+            Reserve1,
+            Reserve2,
+            Coupon1,
+            CouponNo1,
+            Coupon2,
+            CouponNo2,
+            Delivery,
+            DeliType,
+            BankCode,
+            BankAccount,
+            BankSender,
+            Vbank,
+            VAcount,
+            Cdt,
+            GoodsNo,
+            GoodsNm,
+            Opt1,
+            Opt2,
+            AddOpt,
+            Bacode,
+            TaxYn,
+            Ea,
+            Price,
+            Supply,
+            SumPakingKey,
+            PartDeliType,
+            PartDeliYn,
+            SangPumFullCd,
+            DeliveryCode,
+            DeliveryNo,
+            Ddt,
+            SelfDelivery,
+            SelfDeliveryRs,
+            ConfirmDt,
+            Confirm,
+            EscrowYn,
+            EscrowConfirm,
+            EscrowNo,
+            CashReceipt,
+            CancelBankCode,
+            CancelBankaccount,
+            CancelBackuser,
+            CancelCcDt,
+            CancelRfee,
+            OrdStatus,
+            PackingDt,
+            ReceiveDt,
+            DeliveryType,
+            BfCancelType,
+            RtReqType,
+            OutConfirmType,
+            PrgStatus,
+            Regdate,
+            Condate,
+            ErrorStatus,
+            WorkDiv,
+            Safe_key,
+            ARSWorkDiv,
+            ARSStatus,
+            ARSRecvDate,
+            ARSErrorStatus,
+            ORI_STORE_CD,
+            CONF_STORE_CD,
+            DeleveryStoreCD,
+            AddressChange,
+            PaymentStatus,
+            MoneyPaymentComplete,
+            off_zone_area_flag,
+            off_zone_area_cd,
+            SendBackReqDate,
+            SendBackResDate,
+            SendBackDeliveryNo
+        )
+        SELECT *
+          FROM IF_ORDER
+	</insert>
+
+	<select id="getCvsPickupCountToOpenDB" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesDelivery" resultType="int">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesDeliveryDao.getCvsPickupCountToOpenDB [OPENDB에서 편의점 픽업배송 카운트 조회][백인천] */
+		SELECT 
+		   COUNT(ORDER_NUM) as orderCount
+		FROM 
+		   link_inetopendb.inetopen.CVS_PICKUP WITH(NOLOCK) 
+		WHERE ORDER_NUM = #{orderNum}
+	</select>
+	
+	<insert id="insertOrderToCvsPickupOpenDB" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesDelivery">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesDeliveryDao.insertOrderToCvsPickupOpenDB [OPENDB의 CVS_PICKUP테이블에 편의점배송정보 생성][백인천] */
+		INSERT INTO link_inetopendb.inetopen.CVS_PICKUP (
+            order_num
+            , store_code
+            , ho_code
+            , store_address1
+            , store_address2
+            , post_no
+            , code_f
+            , dd_zone
+            , dd_bag
+            , codepany
+            , codename
+            , codetel
+            , eupmyeon
+        )
+        SELECT 
+			  OC.ORDER_NO
+			, OOCS.CVNSTR_NO_TEXT
+			, CASE 
+				WHEN OOCS.CVNSTR_CODE = '10000' THEN '01'
+				WHEN OOCS.CVNSTR_CODE = '10001' THEN '02'
+			  END CVNSTR_CODE
+			, OOCS.POST_ADDR_TEXT
+			, OOCS.DTL_ADDR_TEXT
+			, OOCS.POST_CODE_TEXT
+			, OOCS.ARVL_STORE_CODE_TEXT
+			, OOCS.ARVL_STORE_BRCD_TEXT
+			, OOCS.DONG_NAME_CODE_TEXT
+			, CASE 
+				WHEN OOCS.CVNSTR_CODE = '10000' THEN 'GS25'
+				WHEN OOCS.CVNSTR_CODE = '10001' THEN 'CU'
+			  END CVNSTR_CODE
+			, OOCS.CVNSTR_NAME
+			, OOCS.TEL_NO_TEXT
+			, OOCS.ARVL_DONG_NAME
+		FROM OC_ORDER OC
+			, OC_ORDER_PRODUCT OOP
+			, OC_ORDER_DELIVERY_HISTORY OODH
+			, OC_ORDER_CONVENIENCE_STORE OOCS
+		WHERE OC.ORDER_NO = OOP.ORDER_NO
+			AND OOP.ORDER_NO = OODH.ORDER_NO
+			AND OOP.ORDER_PRDT_SEQ = OODH.ORDER_PRDT_SEQ
+			AND OC.ORDER_NO = OOCS.ORDER_NO
+			AND OOP.MMNY_PRDT_YN = 'Y'
+			AND OODH.DLVY_DSCNTC_YN = 'N'
+			AND OODH.MISS_PROC_YN = 'N'
+			AND OOP.SELL_CNCL_REQ_YN = 'N'
+			AND OOP.PRDT_TYPE_CODE IN ('10000','10001','10002')
+			AND OC.DLVY_TYPE_CODE = '10001'
+			AND OODH.WMS_SEND_YN = 'N'
+			AND OODH.DLVY_ID_TEXT = #{dlvyId}
+	</insert>
+
+	<insert id="insertChangeOrderToOpenDB">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesDeliveryDao.insertChangeOrderToOpenDB [OPENDB IF_ORDER에 교환배송데이터 생성][백인천] */
+		WITH V_TEMP AS (
+            SELECT to_char(SYSDATE, 'yyMMdd') yymmdd, 
+                   C.DLVY_ID dlvy_id,
+                   D.order_prdt_seq order_prdt_seq,
+                   (SELECT CASE WHEN MIN(A1.PYMNT_MEANS_CODE) = '01' THEN '3'
+                                WHEN MIN(A1.PYMNT_MEANS_CODE) = '02' THEN '0'
+                                WHEN MIN(A1.PYMNT_MEANS_CODE) = '03' THEN '5'
+                                WHEN MIN(A1.PYMNT_MEANS_CODE) = '04' THEN '1'
+                                ELSE 'Z'
+                           END 
+                     FROM TB_PAYMENT A1 
+                    WHERE A1.PYMNT_SEQ = (SELECT MIN(A11.pymnt_seq) FROM TB_PAYMENT A11 WHERE A11.order_num = A.ORDER_NUM)) settleKind,
+                   get_point_coupon_enuri(D.order_prdt_seq) enuri,
+                   get_point_coupon_enuri_no_point(D.order_prdt_seq) enuri_nopoint,
+                   (SELECT COUNT(*) FROM TB_ORDER_PRODUCT_COUPON WHERE ORDER_PRDT_SEQ = D.ORDER_PRDT_SEQ) couponCount,
+                   (SELECT MIN(A11.pymnt_seq) FROM TB_PAYMENT A11 WHERE A11.order_num = A.ORDER_NUM) pymnt_seq
+              FROM TB_ORDER A, 
+                   TB_CLAIM B,
+                   TB_DELIVERY C,
+                   TB_DELIVERY_PRODUCT D
+             WHERE A.ORDER_NUM = B.ORDER_NUM 
+               AND B.CLM_SEQ = C.CLM_SEQ 
+               AND B.RTN_CHNG_CODE = 'C'
+               AND B.CLM_STAT_CODE = '04'
+               AND C.WMS_YN = 'P'
+               AND C.DLVY_ID = D.DLVY_ID
+               AND A.OLD_ORDER_YN = 'N'
+               AND C.DLVY_STAT_CODE NOT IN ('09', '10')               
+        )
+        INSERT INTO link_inetopendb.inetopen.if_ORDER (
+            CBCd,
+            MaejangCd,
+            OrdNo,
+            ItemSno,
+            OrdType,
+            OrdDt,
+            SumPakingRule,
+            OrdDp,
+            OldOrdNo,
+            NameOrder,
+            MobileOrder,
+            PhoneOrder,
+            MemberYn,
+            MemberId,
+            NameReceiver,
+            MobileReceiver,
+            PhoneReceiver,
+            Zipcode,
+            Address,
+            AddressDetail,
+            Email,
+            DeliMsg,
+            Memo,
+            AdminnMemo,
+            MallName,
+            MallOrdNo,
+            SettleKind,
+            PrnSettlePrice,
+            SettlePrice,
+            Enuri,
+            MemberDc,
+            Emoney1,
+            Emoney2,
+            Reserve1,
+            Reserve2,
+            Coupon1,
+            CouponNo1,
+            Coupon2,
+            CouponNo2,
+            Delivery,
+            DeliType,
+            BankCode,
+            BankAccount,
+            BankSender,
+            Vbank,
+            VAcount,
+            Cdt,
+            GoodsNo,
+            GoodsNm,
+            Opt1,
+            Opt2,
+            AddOpt,
+            Bacode,
+            TaxYn,
+            Ea,
+            Price,
+            Supply,
+            SumPakingKey,
+            PartDeliType,
+            PartDeliYn,
+            SangPumFullCd,
+            DeliveryCode,
+            DeliveryNo,
+            Ddt,
+            SelfDelivery,
+            SelfDeliveryRs,
+            ConfirmDt,
+            Confirm,
+            EscrowYn,
+            EscrowConfirm,
+            EscrowNo,
+            CashReceipt,
+            CancelBankCode,
+            CancelBankaccount,
+            CancelBackuser,
+            CancelCcDt,
+            CancelRfee,
+            OrdStatus,
+            PackingDt,
+            ReceiveDt,
+            DeliveryType,
+            BfCancelType,
+            RtReqType,
+            OutConfirmType,
+            PrgStatus,
+            Regdate,
+            Condate,
+            ErrorStatus,
+            WorkDiv,
+            Safe_key,
+            ARSWorkDiv,
+            ARSStatus,
+            ARSRecvDate,
+            ARSErrorStatus,
+            ORI_STORE_CD,
+            CONF_STORE_CD,
+            DeleveryStoreCD,
+            AddressChange,
+            PaymentStatus,
+            MoneyPaymentComplete,
+            off_zone_area_flag,
+            off_zone_area_cd,
+            SendBackReqDate,
+            SendBackResDate,
+            SendBackDeliveryNo
+        )
+        SELECT CASE WHEN C.send_place = 'AS' THEN 'AS'
+                    ELSE 'AI'
+               END cbcd,
+               CASE WHEN C.send_place = 'AS' THEN '9999'
+                    WHEN C.send_place = 'AW' THEN '0318'
+                    ELSE '0072'
+               END meajangCd,
+               C.DLVY_ID ordNo,
+               TO_CHAR(E.ORDER_PRDT_SEQ) ItemSno,
+               '2' ordType,
+               A.ORDER_DTM ordDt,
+               '0' sumPakingRule,
+               '0' ordDp,
+               A.ORDER_NUM oldOrdNo,
+               SUBSTRING(B.SEND_BACK_RCVR_NAME, 0, 24) nameOrder,
+               B.SSCBR_HDPHN_NUM1 || '-' || B.SSCBR_HDPHN_NUM2 || '-' || B.SSCBR_HDPHN_NUM3 mobileOrder,
+               B.SSCBR_HDPHN_NUM1 || '-' || B.SSCBR_HDPHN_NUM2 || '-' || B.SSCBR_HDPHN_NUM3 phoneOrder,
+               'Y' memberYn,
+               A.ORDER_USER_ID memberId,
+               B.SEND_BACK_RCVR_NAME nameReceiver,
+               B.SEND_BACK_HDPHN_NUM1 || '-' || B.SEND_BACK_HDPHN_NUM2 || '-' || B.SEND_BACK_HDPHN_NUM3 mobileReceiver,
+               B.SEND_BACK_HDPHN_NUM1 || '-' || B.SEND_BACK_HDPHN_NUM2 || '-' || B.SEND_BACK_HDPHN_NUM3 phoneReceiver,
+               B.SEND_BACK_POST_NUM zipcode,
+               B.SEND_BACK_ADDR address,
+               B.SEND_BACK_ADDR_DTL addressDetail,
+               B.SSCBR_MAIL_ADDR email,
+               '' deliMsg,
+               null memo,
+               null adminMemo,
+               CASE WHEN C.send_place = 'AI' THEN 'ABC-Mart'
+                    WHEN C.send_place = 'AW' THEN '재고통합'
+                    WHEN C.send_place = 'AS' THEN 'ABC-Mart'
+                    ELSE 'ABC-Mart'
+               END mallName,
+               null mallOrdNo,
+               V.settleKind,
+               prn_settle_price(C.DLVY_ID) prnSettlePrice,
+               settle_price(C.DLVY_ID) - (V.enuri_nopoint + V.enuri) settlePrice,
+               (E.SNGL_PRDT_ORG_PRICE - E.SNGL_PRDT_SELL_AMT) * D.PRDT_COUNT + V.enuri_nopoint enuri,
+               V.enuri memberDc,
+               0 emoney1,
+               0 emoney2,
+               0 reserve1,
+               0 reserve2,
+               [get_coupon_amt_for_type](E.order_prdt_seq, 'Y') coupon1,
+               CASE WHEN V.couponCount >= 1 THEN 
+                         (SELECT cpn_id FROM TB_ORDER_PRODUCT_COUPON WHERE order_prdt_seq = E.order_prdt_seq ORDER BY order_prdt_cpn_seq FETCH FIRST 1 ROWS ONLY)
+                    ELSE NULL
+               END couponNo1,
+               [get_coupon_amt_for_type](E.order_prdt_seq, 'N') coupon2,
+               CASE WHEN V.couponCount = 2 THEN 
+                         (SELECT cpn_id FROM TB_ORDER_PRODUCT_COUPON WHERE order_prdt_seq = E.order_prdt_seq ORDER BY order_prdt_cpn_seq DESC FETCH FIRST 1 ROWS ONLY)
+                    ELSE NULL
+               END couponNo2,
+               B.DLVY_AMT - DLVY_CPN_DSCNT_AMT delivery,
+               '2' deliType,
+               CASE WHEN settleKind = '04' THEN 
+                         (SELECT PYMNT_ORGAN_CODE FROM TB_PAYMENT WHERE pymnt_seq = V.pymnt_seq)
+                    ELSE NULL 
+               END bankCode,
+               NULL bankAccount,
+               (SELECT MAX(LGD_PAYER)
+                  FROM TB_IMAGINE_ACCOUNT_PAYMENT 
+                 WHERE LGD_CASFLAG = 'I' 
+                   AND LGD_PAYER IS not null
+                   AND pymnt_seq = V.pymnt_seq
+                 GROUP BY pymnt_seq) bankSender,
+               NULL vbank,
+               NULL vAcount,
+               (SELECT TO_CHAR(pymnt_dtm, 'YYYYMMDD') FROM TB_PAYMENT WHERE pymnt_seq = V.pymnt_seq) cdt,
+               E.ORDER_PRDT_CODE goodsNo,
+               F.PRDT_ENG_NAME goodsNm,
+               E.OPTN_VALUE opt1,
+               null opt2,
+               null addOpt,
+               null bacode,
+               '0' taxYn,
+               D.PRDT_COUNT ea,
+               E.SNGL_PRDT_SELL_AMT price,
+               E.SNGL_PRDT_SELL_AMT supply,
+               0 sumPakingKey,
+               0 partDeliType,
+               0 partDeliYn,
+               E.order_prdt_code || '001' || E.optn_id sangPumFullCd,
+               null deliveryCode,
+               CASE WHEN C.MISS_DLVY_CODE = '05' THEN (SELECT SEND_NUM FROM TB_SEND_NUMBER WHERE DLVY_ID = C.DLVY_ID)
+                    ELSE NULL
+               END deliveryNo,
+               null ddt,
+               0 selfDelivery,
+               null SelfDeliveryRs,
+               null confirmDt,
+               '0' confirm,
+               0 escrowYn,
+               SUBSTR(C.DLVY_TYPE_CODE, -1) escrowConfirm,
+               null escrowNo,
+               null cashReceipt,
+               null cancelBankCode,
+               null cancelBankaccount,
+               null cancelBackuser,
+               null cancelCcDt,
+               0 cancelRfee,
+               'P1101' ordStatus,
+               null packingDt,
+               null receiveDt,
+               'P4400' deliveryType,
+               'P2200' bfCancelType,
+               'P3300' rtReqType,
+               'P5500' outConfirmType,
+               'P6600' prgStatus,
+               SYSDATE regdate,
+               SYSDATE condate,
+               '0' errorStatus,
+               '0' workDiv,
+               CASE WHEN A.ORDER_USER_YN = 'Y' then (SELECT safe_key FROM tb_user WHERE user_id = A.ORDER_USER_ID) 
+                    ELSE NULL
+               END safeKey,
+               '0' ARSWorkDiv,
+               '03' ARSStatus,
+               null ARSRecvDate,
+               '0' ARSErrorStatus,
+               CASE WHEN C.send_place = 'AS' THEN C.plan_store_id
+                    ELSE null
+               END ORI_STORE_CD,
+               null CONF_STORE_CD,
+               null DeleveryStoreCD,
+               '0' AddressChange,
+               '1' PaymentStatus,
+               '1' MoneyPaymentComplete,
+               NVL((SELECT off_zone_area_flag FROM TB_STORE WHERE store_id = C.plan_store_id), '') off_zone_area_flag,
+               NVL((SELECT off_zone_area_cd FROM TB_STORE WHERE store_id = C.plan_store_id), '') off_zone_area_cd,
+               NULL SendBackReqDate,   
+               NULL SendBackResDate,   
+               NULL SendBackDeliveryNo 
+          FROM TB_ORDER A,
+               TB_CLAIM B,
+               TB_DELIVERY C,
+               TB_DELIVERY_PRODUCT D,
+               TB_ORDER_PRODUCT E,
+               TB_PRODUCT F,
+               V_TEMP V,
+               TB_VENDOR_CONTRACT VC
+         WHERE A.ORDER_NUM = B.ORDER_NUM 
+           AND A.OLD_ORDER_YN = 'N'
+           AND B.CLM_SEQ = C.CLM_SEQ
+           AND B.RTN_CHNG_CODE = 'C'
+           AND B.CLM_STAT_CODE = '04'
+           AND C.WMS_YN = 'P'
+           AND C.DLVY_ID = D.DLVY_ID
+           AND D.ORDER_PRDT_SEQ = E.ORDER_PRDT_SEQ
+           AND E.ORDER_PRDT_CODE = F.PRDT_CODE
+           AND E.ORDER_PRDT_SEQ = V.order_prdt_seq
+           AND A.OLD_ORDER_YN = 'N'
+           AND F.VNDR_CNTRT_ID = VC.VNDR_CNTRT_ID 
+           AND VC.ONLINE_YN = 'Y'
+	</insert>
+	
+	
+	
+
+	 <select id="selectAblePickUpTacbaeNumber" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesPickupCustomer" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesPickupCustomer">
+       /*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesDeliveryDao.selectAblePickUpTacbaeNumber [편의점 픽업 배송 완료처리건 수신][김영진] */
+		 SELECT 
+        	send_num sendNum
+         FROM link_inetopendb.inetopen.IF_CVS_PICKUP_CUSTOMER
+         WHERE send_num = #{sendNum}
+           AND conf_yn = 'N'
+    </select>
+    
+    <select id="selectDtm" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesPickupCustomer" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesPickupCustomer">
+    
+    SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS')confDtm
+    
+    </select>
+    
+    <update id="updatePickUpDeliveryBySendNumber" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesPickupCustomer">
+       /*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesDeliveryDao.updatePickUpDeliveryBySendNumber [편의점 픽업 배송 상태값 변경 처리][김영진] */
+        UPDATE link_inetopendb.inetopen.IF_CVS_PICKUP_CUSTOMER
+           SET conf_yn = 'Y' 
+           ,conf_dtm = #{confDtm}
+         WHERE send_num = #{sendNum}
+           AND conf_yn = 'N'
+    </update>
+
+
+	<update id="updateextensionPickupPsblt" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesReturnProcdurePickupPsblt">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesDeliveryDao.updateextensionPickupPsblt [매장 픽업 배송 연장 프로시저 호출][김영진] */
+		EXEC LINK_NGISNS.ngisns_online.PR_COM_PICKUP_EXPIRE_DATE_EXTEND 'AS', #{dlvyId}, #{addPsbltDt}
+	</update>
+	
+	
+	
+	<update id="updateChngDlvyType" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesReturnProcedureAddr">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesDeliveryDao.updateChngDlvyType [배송 타입 변경 프로시저][김영진] */
+	EXEC link_inetopendb.inetopen.PR_ORDER_CHANGE_FOR_DLVY_TYPE
+                    #{CBCd},
+                    #{MaejangCd},
+                    #{dlvyId},
+                    #{newRcvrName},
+                    #{newDlvyPostNum},
+                    #{newHpNum},
+                    #{newHpNum2},
+                    #{newHpNum3},
+                    #{newTelNum},
+                    #{newTelNum2},
+                    #{newTelNum3},
+                    #{newAddr1},
+                    #{newAddr2},
+                    #{dlvyMessage}
+                    
+	</update>
+
+	
+
+
+</mapper>

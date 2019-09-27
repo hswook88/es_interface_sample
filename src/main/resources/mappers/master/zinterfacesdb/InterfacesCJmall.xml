@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao">
+
+	<delete id="deleteGarbageOrder">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao.deleteGarbageOrder [택배사미연동데이터 삭제][백인천] */
+		DELETE LINK_INETOPENDB.INETOPEN.IF_ORDER_CJ
+		WHERE printYn = 'N'
+	</delete>
+	
+	<insert id="insertOrder" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.cjmall.CJInstructionDetail">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao.insertOrder [주문/출하지시 인터페이스 결과 DB에 반영][백인천] */
+		IF EXISTS( SELECT TOP 1 'X'
+			FROM LINK_INETOPENDB.INETOPEN.IF_ORDER_CJ WITH(NOLOCK)
+			WHERE ordNo        = #{ordNo}
+			  AND ordGSeq      = #{ordGSeq}
+			  AND ordDSeq      = #{ordDSeq}
+			  AND ordWSeq      = #{ordWSeq}
+			  AND wbIdNo       = #{wbIdNo}
+		)
+		BEGIN
+			PRINT '기등록된 주문데이터가 있는 경우 패스'
+		END
+		ELSE
+		BEGIN
+			INSERT INTO LINK_INETOPENDB.INETOPEN.IF_ORDER_CJ (
+				  ordNo				/* 주문정보-주문번호  */
+				, ordGSeq			/* 주문정보-주문상품순번 */
+				, ordDSeq			/* 주문정보-주문상세순번 */
+				, ordWSeq			/* 주문정보-주문처리순번 */
+				, ordDtlClsNm		/* 주문구분 */
+				, ordDtlClsCd		/* 주문구분코드 */
+				, wbProgCd			/* 진행구분 */
+				, transClsCd		/* 출고보류여부 */
+				, wbCrtDt			/* 지시일자 */
+				, cnclInsDtm		/* 취소일자 */
+				, outwConfDt		/* 출고확정일자 */
+				, wbProcDt			/* 고객인수일자 */
+				, chnNm				/* 채널구분 */
+				, recvNm			/* 인수자 */
+				, msgSpec			/* 배송참고 */
+				, delvplnDt			/* 배송예정일 */
+				, itemCd			/* 판매코드 */
+				, unitCd			/* 단품코드 */
+				, itemName			/* 판매상품명 */
+				, unitNm			/* 단품상세 */
+				, outwQty			/* 수량 */
+				, realslAmt			/* 판매가 */
+				, outwAmt			/* 고객결제가 */
+				, delivClsNm		/* 배송구분 */
+				, delivMethNm		/* 배송방법 */
+				, delicompCd		/* 택배사 */
+				, wbIdNo			/* 운송장식별번호 */
+				, wbNo				/* 운송장번호 */
+				, mixpackYn			/* 합포장여부 */
+				, promGiftSpec		/* 사은품내역 */
+				, cnclRsnCd			/* 교환/취소사유 */
+				, cnclRsnSpec		/* 사유상세 */
+				, telno				/* 인수자tel */
+				, cellno			/* 인수자HP */
+				, addr				/* 주소 */
+				, zipno				/* 우편번호 */
+				, printYn			/* 출력여부 */
+				, workDiv			/* 0:CJ주문정보등록 ,  1:주문정보 WMS 전송 */
+				, regDT				/* CJ 주문정보 등록일시 */
+				, WMSSendDT			/* WMS에 전송일시 */
+				, errorStatus		/* */
+				, noDelyGb			/* 미출고사유 ( 40 : 재고부족취소요청 ) 으로 고정. */
+				, noDelyDesc		/* 미출고 사유 상세 */
+				, hopeDelyDate		/* 창고출고예정일 */
+				, noDelyRegDT		/* 미배송 등록일시 */
+				, noDelyCJSendDT	/* 미배송 CJ mall 전송일시 */
+				, noDelyWorkDiv		/* 미배송처리여부 ( 0: 미처리, 1: 처리 ) */
+			) VALUES (
+				  #{ordNo}
+				, #{ordGSeq}
+				, #{ordDSeq}
+				, #{ordWSeq}
+				, #{ordDtlClsNm}
+				, #{ordDtlClsCd}
+				, #{wbProgCd}
+				, #{transClsCd}
+				, #{wbCrtDt}
+				, #{cnclInsDtm}
+				, #{outwConfDt}
+				, #{wbProcDt}
+				, #{chnNm}
+				, #{recvNm}
+				, #{msgSpec}
+				, #{delvplnDt}
+				, #{itemCd}
+				, #{unitCd}
+				, #{itemName}
+				, #{unitNm}
+				, #{outwQty}
+				, #{realslAmt}
+				, #{outwAmt}
+				, #{delivClsNm}
+				, #{delivMethNm}
+				, #{delicompCd}
+				, #{wbIdNo}
+				, #{wbNo}
+				, #{mixpackYn}
+				, #{promGiftSpec}
+				, #{cnclRsnCd}
+				, #{cnclRsnSpec}
+				, #{telno}
+				, #{cellno}
+				, #{addr}
+				, #{zipno}
+				, #{printYn}
+				, '0'
+				, SYSDATE
+				, NULL
+				, '0'
+				, NULL
+				, NULL
+				, NULL
+				, NULL
+				, NULL
+				, NULL
+			)
+		END
+	</insert>
+
+	<select id="selectLastOrderDt" resultType="int">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao.selectLastOrderDt [마지막 주문일자 조회][백인천] */
+		SELECT 
+			  DATEDIFF(DAY, CAST(A.LASTDT AS datetime)
+			, SYSDATE)
+		FROM (
+				SELECT NVL(MAX(ILJA), TO_CHAR(SYSDATE, 'YYYYMMDD')) AS LASTDT
+				FROM LINK_INETOPENDB.INETOPEN.IF_ORDER_CJ_STD_TIME
+				WHERE STD_DATETIME IS NOT NULL
+			) A
+	</select>
+
+    <update id="execPrOrderCJ">
+    	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao.execPrOrderCJ [CJ주문데이터 -> wms로 전송][백인천] */
+        EXEC LINK_INETOPENDB.INETOPEN.PR_ORDER_CJ
+    </update>
+
+	<select id="selectWmsHoliday" resultType="int">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao.selectWmsHoliday [WMS 직전일 휴무여부 조회][백인천] */
+		SELECT COUNT(1)
+		FROM LINK_INETOPENDB.INETOPEN.IF_WMS_HOLIDAY
+		WHERE 1=1
+			AND HOLIDAY_ILJA = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
+			AND errorStatus  = '0'
+	</select>
+	
+	<select id="selectSangpumLtRenewal" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.cjmall.CJLtSupplyPlan">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao."selectSangpumLtRenewal" [CJ몰 판매가능수량 조회][백인천] */
+		SELECT TOP 100
+			  A.CJUnitCd                                                   AS unitCd                      
+			, B.ChnCls                                                     AS chnCls                      
+			, TO_CHAR(SYSDATE, 'YYYY-MM-DD')     				AS strDt                       
+			, '9999-12-31'                                                 AS endDt                       
+			, NVL(C.Qty, 0)                                             	AS availSupQty                 
+			, A.SangPumFullCd                                              AS SANGPUMFULLCD               
+			, TO_CHAR(SYSDATE, 'YYYYMMDD')                       AS stdYYYYMMDD                 
+			, NVL(C.Qty, 0)                                             AS wmsStockQty                 
+			, 0                                                            AS junilOrderQty               
+			, 0                                                            AS dangilOrderQty              
+			, 0                                                            AS junilCancelQty              
+			, 0                                                            AS dangCancelQty               
+		FROM LINK_INETOPENDB.INETOPEN.IF_SANGPUM_CJ_UNIT A WITH(NOLOCK)
+		JOIN LINK_INETOPENDB.INETOPEN.IF_SANGPUM_CJ      B WITH(NOLOCK) ON A.SANGPUMCD = B.SANGPUMCD
+		JOIN LINK_INETOPENDB.INETOPEN.IF_STOCK_WMS       C WITH(NOLOCK) ON A.SangPumFullCd = C.SangPumFullCd
+		WHERE 1=1
+			AND A.CJUnitCd               IS NOT NULL
+			AND B.CJItemCode             IS NOT NULL
+			AND B.BRANDCD                NOT IN ('000050', '000397', '000307', '000072') /* 나이키, 디얼스, 허쉘서플라이, 반스 브랜드 연동제외 */
+			AND C.CBCd                   = 'AI'
+			AND C.MaejangCd              = '0220'
+			AND C.InputType              = '9'
+			AND C.ErrorStatus            = '0'
+			AND C.Qty                    &gt; 0
+			/* 당일에 판매수량변경내역 있는 자료는 제외 */
+			AND NOT EXISTS (
+					SELECT '1'
+					FROM LINK_INETOPENDB.INETOPEN.IF_STOCK_WMS_CJ WITH(NOLOCK)
+					WHERE 1=1
+						AND SANGPUMFULLCD = A.SANGPUMFULLCD
+						AND stdYYYYMMDD = TO_CHAR(SYSDATE, 'YYYYMMDD')
+						AND errorStatus = '0'
+				)
+	</select>
+	
+	<select id="selectProductLtRenewalCount" resultType="int">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao.selectProductLtRenewalCount [재고를 변경할 단품의 갯수][백인천] */
+		SELECT COUNT(1)               
+		FROM LINK_INETOPENDB.INETOPEN.IF_SANGPUM_CJ_UNIT A WITH(NOLOCK)
+		JOIN LINK_INETOPENDB.INETOPEN.IF_SANGPUM_CJ B WITH(NOLOCK) ON A.SANGPUMCD = B.SANGPUMCD
+		JOIN LINK_INETOPENDB.INETOPEN.IF_STOCK_WMS C WITH(NOLOCK) ON A.SangPumFullCd = C.SangPumFullCd
+		WHERE 1=1
+			AND A.CJUnitCd               IS NOT NULL
+			AND B.CJItemCode             IS NOT NULL
+			AND B.BRANDCD                NOT IN ('000050', '000397', '000307', '000072') /* 나이키, 디얼스, 허쉘서플라이, 반스 브랜드 연동제외 */
+			AND C.CBCd                   = 'AI'
+			AND C.MaejangCd              = '0220'
+			AND C.InputType              = '9'
+			AND C.ErrorStatus            = '0'
+			AND C.Qty                    &gt; 0
+			/* 당일에 판매수량변경내역 있는 자료는 제외 */
+			AND NOT EXISTS (
+					SELECT '1'
+					FROM LINK_INETOPENDB.INETOPEN.IF_STOCK_WMS_CJ WITH(NOLOCK)
+					WHERE 1=1
+						AND SANGPUMFULLCD = A.SANGPUMFULLCD
+						AND stdYYYYMMDD = TO_CHAR(SYSDATE, 'YYYYMMDD')
+						AND errorStatus = '0'
+				)
+	</select>
+	
+	<update id="updateSangpumUnitErrorStatus" parameterType="string">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao.updateNoDeliveryStatus [미배송등록 처리결과 등록][백인천] */
+		UPDATE LINK_INETOPENDB.INETOPEN.IF_SANGPUM_CJ_UNIT
+		SET errorStatus = '1'
+		WHERE CJUnitCd = #{cjUnitCd}
+    </update>
+	
+	<update id="updateNoDeliveryStatus" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.cjmall.CJDeliveryDetail">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao.updateNoDeliveryStatus [미배송등록 처리결과 등록][백인천] */
+		UPDATE LINK_INETOPENDB.INETOPEN.IF_ORDER_CJ
+		SET noDelyCJSendDT = SYSDATE
+			, noDelyWorkDiv = '2'
+		WHERE ordNo = #{ordNo}
+			AND ordGSeq = #{ordGSeq}
+			AND ordDSeq = #{ordDSeq}
+			AND ordWSeq = #{ordWSeq}
+			AND wbIdNo = #{wbIdNo}
+    </update>
+
+	<update id="updateOrderErrorStatus" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.cjmall.CJDeliveryDetail">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao.updateNoDeliveryStatus [미배송정보 등록거부사유가 발생한 자료에 대하여 에러비트를 셋팅][백인천] */
+		UPDATE LINK_INETOPENDB.INETOPEN.IF_ORDER_CJ
+		SET noDelyCJSendDT = SYSDATE
+			, noDelyWorkDiv = '1'
+		WHERE ordNo = #{ordNo}
+			AND ordGSeq = #{ordGSeq}
+			AND ordDSeq = #{ordDSeq}
+			AND ordWSeq = #{ordWSeq}
+			AND wbIdNo = #{wbIdNo}
+    </update>
+
+	<select id="selectNoDeliveryCnt" resultType="int">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao.selectNoDeliveryCnt [미배송등록 처리대상 조회][백인천] */
+		SELECT COUNT(1)      
+		FROM LINK_INETOPENDB.INETOPEN.IF_ORDER_CJ
+		WHERE 1 = 1
+			AND noDelyWorkDiv = '1'
+			AND errorStatus = '0'
+	</select>
+
+
+	<insert id="insertBackupStockWMS" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.cjmall.CJLtSupplyPlan">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCJmallDao.insertBackupStockWMS [CJ몰 판매가능수량 데이터 백업][백인천] */
+		INSERT INTO IF_STOCK_WMS_CJ (
+			  SANGPUMFULLCD           /* 상품풀코드 */
+			, stdYYYYMMDD             /* 계산일자(물류기준일자) 예) 20121213 */
+			, wmsStockQty             /* 물류기준 수량 */
+			, junilOrderQty           /* 전일 주문수량 */
+			, dangilOrderQty          /* 당일 주문수량 */
+			, junilCancelQty          /* 전일 주문취소수량 */
+			, dangCancelQty           /* 당일 주문취소수량 */
+			, regDate                 /* 등록일시 */
+			, TEMP1                   /* 임시1 */
+			, TEMP2                   /* 임시2 */
+			, errorStatus             /* 에러상태코드(0:정상 1:오류) */
+		) VALUES (
+			  #{SANGPUMFULLCD}
+			, #{stdYYYYMMDD}
+			, #{wmsStockQty}
+			, #{junilOrderQty}
+			, #{dangilOrderQty}
+			, #{junilCancelQty}
+			, #{dangCancelQty}
+			, SYSDATE
+			, NULL
+			, NULL
+			, '0'
+		)
+	</insert>
+
+</mapper>

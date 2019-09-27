@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesCouPonTestDao">
+
+<!-- 
+<update id="testCoupon" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.CouponTest"> 
+
+	 EXEC  PR_USE_COUPON_OFFLINE_TEST #{cpnNo}, #{memberNo}, #{storeapplycode}
+	 SELECT #{cpnId} cpnId, #{couponUseYn} couponUseYn
+
+</update>
+ -->
+
+
+</mapper>

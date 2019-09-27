@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao">
+	
+	<select id="selectAlterErpStock" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesChngProductErpStock" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesChngProductErpStock">	 
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.selectAlterErpStock [중간계 테이블에서 온라인 오프라인의 재고정보 수신][김영진] */
+		SELECT	top (50)	CBCd	cbcd,  
+               		MaejangCd maejangCd,
+               		SangPumFullCd sangPumFullCd,
+               		SUM(CASE WHEN inputType in ('1', '3', '5', '7') THEN qty 
+                    WHEN inputType in ('2', '4', '6', '8') THEN -qty 
+                    ELSE 0
+                    END)qty
+                   ,inputType
+        FROM Link_inetopendb.inetopen.IF_STOCK_WMS
+        WHERE cbcd = 'AI' 
+        AND ErrorStatus = '0'
+        AND workDiv = '1'
+		AND MaejangCd != '0220'      
+        GROUP BY cbcd, maejangCd, sangPumFullCd ,inputType
+				UNION ALL
+		SELECT top (50)  CBCd cbcd
+             	  ,MaejangCd maejangCd
+               	  ,SangPumFullCd sangPumFullCd
+                  ,Qty qty
+                  ,inputType
+         		 FROM Link_inetopendb.inetopen.IF_STOCK_ARS
+        WHERE cbcd in ('AS', 'AW')
+        AND ErrorStatus = '0'
+        AND workDiv = '1' 
+		AND MaejangCd != '0220'
+		</select>
+
+	 <select id="selectPdProductErpList" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesChngOnlineStock" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesChngOnlineStock">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.selectPdProductErpList [수정전상품 내부 테이블조회][김영진] */
+		SELECT   A.PRDT_NO
+				,A.PRDT_OPTN_NO
+				,A.TOTAL_STOCK_QTY
+				,A.RGST_DTM
+				,A.TOTAL_ORDER_QTY
+				, (SELECT MAX(CHNG_HIST_SEQ)FROM PD_PRODUCT_OPTION_CHANGE_HISTORY WHERE PRDT_NO = A.PRDT_NO) AS chngHistSeq
+		From  PD_PRODUCT_OPTION A			
+		WHERE  A.PRDT_OPTN_NO = '001'
+			AND	A.PRDT_NO = '1000000008'  <!-- 현재 샘플데이터를 기준으로 만들어진 쿼리 조건 제한 플어야함 -->
+		
+		<!-- SELECT 
+			 B.PRDT_NO
+			,B.PRDT_OPTN_NO
+			,B.STOCK_GBN_CODE
+			,B.STOCK_QTY
+			,B.ORDER_COUNT
+			,A.TOTAL_STOCK_QTY
+			,A.RGST_DTM
+			,A.TOTAL_ORDER_QTY
+		From PD_PRODUCT_OPTION_STOCK B,
+			 PD_PRODUCT_OPTION A
+		WHERE B.STOCK_GBN_CODE = #{cbcd}
+			AND B.PRDT_OPTN_NO = #{prdtOptnNo}
+			AND	B.PRDT_NO = A.PRDT_NO
+			AND B.PRDT_OPTN_NO = A.PRDT_OPTN_NO
+			AND A.VNDR_PRDT_NO_TEXT = #{vndrPrdtNoText}
+	 -->
+	</select>	
+	 
+	
+		
+	<update id="updateAlterStock" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineStockUpdate">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.updateAlterStock [PD_PRODUCT_OPTION_STOCK 테이블 UPDATE][김영진] */
+		UPDATE B
+			SET B.STOCK_QTY = #{stockQty},
+				B.RGST_DTM = SYSDATE
+		FROM PD_PRODUCT_OPTION A,
+			 PD_PRODUCT_OPTION_STOCK B
+		WHERE A.VNDR_PRDT_NO_TEXT = #{vndrPrdtNoText}
+		 AND  A.PRDT_NO = B.PRDT_NO
+		 AND  A.PRDT_OPTN_NO = #{prdtOptnNo}
+		 AND  B.STOCK_GBN_CODE = #{stockGbnCode}
+	</update>
+	
+	
+	<insert id="insertStockHistory" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineProductStockHistory" >
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.insertStockHistory [재고UPDATE 이력 INSERT][김영진] */
+		insert into PD_PRODUCT_OPTION_CHANGE_HISTORY(
+			 PRDT_NO
+			,PRDT_OPTN_NO
+			,CHNG_HIST_SEQ
+			,CHNG_FIELD
+			,CHNG_FIELD_NAME
+			,CHNG_BEFORE_FIELD_VALUE
+			,CHNG_AFTER_FIELD_VALUE
+			,RGSTER_NO 
+			,RGST_DTM 
+		)values(
+			 #{prdtNo}
+			,#{prdtOptnNo}
+			,#{chngHistSeq}
+			,#{changeCol}
+			,#{changeName}
+			,#{bfStockQty}
+			,#{afStockQty}
+			,#{rgstNo}
+			,SYSDATE
+		)
+		</insert>
+		
+	 
+	<update id="updateMaseterStock" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineProductStock">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.updateMaseterStock [PD_PRODUCT_OPTION테이블 UPDATE][김영진] */
+		UPDATE B			 
+				SET	 B.TOTAL_STOCK_QTY =  #{totalstockQty} <!--  #{totalstockqty} -->
+					,B.TOTAL_ORDER_QTY = 
+									(SELECT SUM(ORDER_COUNT)
+									FROM PD_PRODUCT_OPTION_STOCK A
+									WHERE PRDT_NO = B.PRDT_NO
+									AND PRDT_OPTN_NO = B.PRDT_OPTN_NO)
+					,MOD_DTM = SYSDATE
+		FROM PD_PRODUCT_OPTION B
+		WHERE  B.PRDT_NO = #{prdtNo}<!--  #{prdtNo} -->
+	    AND B.PRDT_OPTN_NO = #{prdtOptnNo}
+	</update>
+
+<!-- 감가 배치   --> 
+		
+	<select id="selectAlterErpGamga" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesChngProductErpGamga" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesChngProductErpGamga">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.selectAlterErpGamga [중간계 ERP감가 변경 정보 조회][김영진] */
+		SELECT top(50)  MgAmt		nomalAmt
+			   ,GamGaAmt	sellAmt
+			   ,StrYmd		applyStartDtm
+			   ,StpYmd		applyEndDtm
+			   ,SUBSTRING(SangPumFullCd, 1, 7)vndrPrdtNo	
+		FROM LINK_INETOPENDB.INETOPEN.IF_GAMGA
+		WHERE 		CBCd = 'AI'
+		 AND		MAEJANGCD = '0072'
+		 AND		ERRORSTATUS = '0'
+		 AND	  	WORKDIV = '2'
+		 AND		SUBSTRING(SangPumFullCd, 1, 7)= '0016368'
+		GROUP BY MgAmt, GamGaAmt ,StrYmd ,StpYmd ,SUBSTRING(SangPumFullCd, 1, 7)
+			
+	</select>
+
+
+ 	<select id="selectPdProdcutGamGaList" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineproductGamGa" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineproductGamGa">
+ 		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.selectPdProdcutGamGaList [상품 가격정보 및 시퀀스 확인][김영진] */
+ 		SELECT 	 A.PRDT_NO
+ 			    , (SELECT MAX(PRDT_PRICE_HIST_SEQ)FROM PD_PRODUCT_PRICE_HISTORY WHERE PRDT_NO = A.PRDT_NO) AS PRDT_PRICE_HIST_NEXT_SEQ 
+ 		FROM 	PD_PRODUCT A
+ 		WHERE 	A.PRDT_NO = '1000000010'  <!-- 상품 마스터 테이블에 ERP 상품코드 x 삭제하고 위에 주석 복구 -->
+ 	</select>
+
+
+	<insert id="insertchngGamGa" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineProductGamGaHistroy">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.insertchngGamGa [가격 변경이력 INSERT][김영진] */
+		INSERT PD_PRODUCT_PRICE_HISTORY(
+			PRDT_NO 
+			,PRDT_PRICE_HIST_SEQ 
+			,APPLY_START_DTM  
+			,APPLY_END_DTM  
+			,NORMAL_AMT  
+			,SELL_AMT  
+			,ERP_DSCNT_RATE  
+			,ONLN_DSCNT_RATE 
+			,EMP_DSCNT_RATE  
+			,RGSTER_NO  
+			,RGST_DTM )VALUES(
+			#{prdtNo} <!-- 가격이력테이블에 임시데이터 확인 -->
+			,#{prdtPriceHistNextSeq}
+			,SYSDATE
+			,SYSDATE
+			,#{normalAmt}
+			,#{sellAmt}
+			,#{erpDscntRate}
+			,0
+			,0
+			,'AAA'
+			,SYSDATE)
+	</insert>
+ 
+ 
+  
+<!--  상품 변경이력 조회 전체 데이터를 긁어오기엔 시간이 오래걸려서 리스트 조회후 해당 상품에 옵션정보만 긁어오게끔.. -->
+
+ 	<select id="selectAlterErpSangPumList" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesChngProductErpSangPum" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesChngProductErpSangPum">
+ 		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.selectAlterErpSangPumList [중간계 ERP상품 변경정보 수신 ][김영진] */
+ 		SELECT  	CBCd					cbcd
+      				,MaejangCd				maejangCd
+      				,SangPumFullCd 			sangPumFullCd
+      				,SangPumCd				sangPumCd
+      				,ColorNm				ColorNm
+      				,SizeCd					SizeCd
+      				,BarCode				BarCode
+      				,BarCode1				BarCode1
+      				,BarCode2				BarCode2
+      				,SangPumNm				SangPumNm
+      				,Style					Style
+      				,AKStyle				AKStyle
+      				,BrandCd				BrandCd
+      				,BrandNm				BrandNm
+      				,SangPumDiv				SangPumDiv
+      				,Sex					Sex
+      				,VendCd					VendCd
+      				,WonSanJi				WonSanJi
+      				,Kind					Kind	
+      				,Matt					Matt
+      				,color_online			coloronline
+      				,heelHeight				heelHeight
+      				,ManuFacturer			ManuFacturer
+      				,ManuFacturerCd			ManuFacturerCd
+      				,EnterDate				EnterDate	
+      				,Importer				Importer
+      				,UseFlag				UseFlag
+      				,BoxInQty				BoxInQty
+      				,RegDate				RegDate
+      				,WMS					WMS
+      				,Abcmart				Abcmart
+      				,OpenMarket				OpenMarket
+      				,ErrorStatus			ErrorStatus
+      				,WorkDiv				WorkDiv
+      				,First_Entry_Date		FirstEntryDate
+      				,Last_Entry_Date		LastEntryDate
+      				,TIER_FLAG				TIERFLAG
+ 	 	FROM link_inetopendb.inetopen.if_SANGPUM
+	 		WHERE WorkDiv = '3' 
+           	 AND ErrorStatus = '0'
+           	 AND SangPumDiv != 'FF000000' 
+		   	 AND WMS IS NOT NULL
+		   	 AND ABCMART IS NOT NULL
+         ORDER BY SizeCd    
+ 	</select>
+<!--  	
+ 	 AND SANGPUMCD = '0000021'
+AND COLORNM = 'BLACK'
+ -->
+<!-- 상품정보고시 소재 입력시 필요한 서브쿼리 
+<select id="">
+SELECT * FROM PD_PRODUCT_ADD_INFO
+where PRDT_NO = #{prdtNo}
+  AND ADD_INFO_TYPE = 'I'  상품정보고시
+  AND prdt_info_notc_seq IN (SELECT PRDT_INFO_NOTC_SEQ  상품정보고시 순번
+                               	 FROM CM_PRODUCT_INFO_NOTICE
+                              	 WHERE PRDT_INFO_NOTC_CODE = (SELECT CODE_DTL_NO
+                                                             	FROM SY_CODE_DETAIL
+                                                           		WHERE CODE_DTL_NAME = '수입자'))  상품DIV 구분값 대응 하드코딩
+</select> 
+ -->
+ 
+	 <select id="selectPdProductDetailList" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineProductDetail" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineProductDetail">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.selectPdProductDetailList [변경전 내부 상품 옵션 조회][김영진] */
+		SELECT 		A.PRDT_NO						prdtNo
+			   		,A.VNDR_PRDT_NO_TEXT			vndrPrdtNoText
+	 				,A.PRDT_NAME					prdtName
+	 				,A.BRAND_NO						brandNo
+	 				,A.ORG_PLACE_CODE				orgPlaceCode
+	 				,A.MODER_NO						morderNo
+	 				,A.STYLE_INFO					styleInfo
+	 				,A.PRDT_TYPE_CODE 				prdtTypeCode
+					,A.MNFTR_NAME	 				mnftrName
+					,A.GENDER_GBN_CODE				genderGbnCode
+					,A.DISP_FLAG_TEXT				dispFlagText
+					,(SELECT CODE_DTL_NO FROM SY_CODE_DETAIL WHERE CODE_DTL_NAME = #{prdtDtlColor} AND CODE_FIELD = 'PRDT_COLOR_CODE') AS prdtColor
+					
+					,(SELECT CODE_DTL_NO FROM SY_CODE_DETAIL WHERE INSD_MGMT_INFO_TEXT = #{orgPlaceCode}  AND CODE_FIELD = 'ORG_PLACE_CODE' )AS orgPlaceCode
+					,(SELECT MAX(CHNG_HIST_SEQ) FROM PD_PRODUCT_CHANGE_HISTORY WHERE PRDT_NO = A.PRDT_NO)AS chngHistSeq			 
+		FROM PD_PRODUCT A
+		WHERE A.VNDR_PRDT_NO_TEXT = #{vndrPrdtNoText}
+		AND A.PRDT_NO = #{prdtNo}			
+	 </select>
+<!-- MAEJANGCD 추후 추가 조겅 및 로직 필요
+,(SELECT PRDT_MATERL_TEXT FROM PD_PRODUCT_ADD_INFO WHERE PRDT_NO = A.PRDT_NO AND ADD_INFO_TYPE = 'A') AS prdtMaterlText
+,(SELECT PRDT_COLOR_CODE FROM PD_PRODUCT_COLOR WHERE PRDT_NO = A.PRDT_NO)AS prdtColorCode
+
+
+ -->
+<!-- 색상별 코드 설정
+
+
+	<select id="selectColorCode" >
+	
+		SELECT 		CODE_FEILD
+					,CODE_DTL_NAME
+					,CODE_DTL_NO
+		FROM SY_CODE_DETAIL
+		WHERE CODE_DTL_NAME = #{prdtColorCode}
+		
+		
+	</select>
+ -->
+
+ <!-- 상품 변경정보 업데이트 처리 ,A.GENDER_GBN_CODE ,A.BRAND_NO = #{brandNo} ,A.PRDT_TYPE_CODE = #{prdtTypeCode} -->
+ 
+ 	<update id="updatePdProductErpSangPumBase" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineProductDetail" >
+ 	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.updatePdProductErpSangPumBase [변경된 ERP상품옵션 PD_PRODUCT테이블 UPDATE][김영진] */
+ 		UPDATE A
+ 			SET A.PRDT_NAME = #{prdtName}
+ 				,A.STYLE_INFO = #{styleInfo}
+ 				,A.MNFTR_NAME = #{mnftrName}
+ 				,A.ORG_PLACE_CODE = #{orgPlaceCode}
+ 		FROM	PD_PRODUCT A
+ 		WHERE	A.PRDT_NO = #{prdtNo}
+ 	</update>
+ 	
+ 	  
+ 
+	<update id="updatePdProductErpSangPumColor" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineProductDetail">
+	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.updatePdProductErpSangPumColor [변경된 ERP상품색상 PD_PRODUCT_COLOR테이블 UPDATE][김영진] */
+		UPDATE B		
+			SET	B.PRDT_COLOR_CODE = #{prdtColor}
+ 		FROM	PD_PRODUCT_COLOR B
+ 		WHERE 	B.PRDT_NO = #{prdtNo}		
+	</update>
+	
+	
+  	<update id="updatePdProductErpSangPumMatt" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineProductDetail">
+  		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.updatePdProductErpSangPumMatt [변경된 ERP상품색상 PD_PRODUCT_ADD_INFO테이블 UPDATE][김영진] */
+  		UPDATE C
+ 			SET	C.PRDT_MATERL_TEXT = #{prdtMaterlText}
+ 		FROM	PD_PRODUCT_ADD_INFO C
+ 		WHERE 	C.PRDT_NO = #{prdtNo}
+  	</update>
+  
+ 
+  
+  
+  
+  <insert id="insertErpProductHistory" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineProductHistory">
+  	/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.insertErpProductHistory [변경된 ERP상품 변경이력 INSERT][김영진] */
+  	insert into PD_PRODUCT_CHANGE_HISTORY(
+			 PRDT_NO
+			,CHNG_HIST_SEQ
+			,CHNG_FIELD
+			,CHNG_FIELD_NAME
+			,CHNG_BEFORE_FIELD_VALUE
+			,CHNG_AFTER_FIELD_VALUE
+			,RGSTER_NO 
+			,RGST_DTM 
+		)values(
+			 #{prdtNo}
+			,#{chngHistSeq}
+			,#{chngField}
+			,#{chngFieldName}
+			,#{chngBeforeField}
+			,#{chngAfterField}
+			,#{rgsterNo}
+			,SYSDATE
+		) 
+  </insert>
+   
+   
+  <select id="selectOrderCount" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineProductStock" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesOnlineProductStock">
+  		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesBatchSqlDao.insertErpProductHistory [PD_PRODUCT_OPTION_STOCK테이블 주문 카운트 조회][김영진] */
+	select 	A.VNDR_PRDT_NO_TEXT
+  			,A.TOTAL_ORDER_QTY
+  			,A.PRDT_NO			 
+			,B.ORDER_COUNT
+  	from pd_product_option A
+	JOIN PD_PRODUCT_OPTION_STOCK B ON B.PRDT_NO = A.PRDT_NO
+  	where VNDR_PRDT_NO_TEXT IS NOT NULL
+	AND B.STOCK_GBN_CODE IN ('10001','10002')
+	AND B.ORDER_COUNT != '0'
+	
+  </select>
+ 
+  <!-- 
+  InterfacesChngOnlineStock
+   
+  <update id="updateOrderCountStock">
+  update A
+  set	ORDER_COUNT = #{ORDERcOUNT}
+  FROM  PD_PRODUCT_OPTION_COUNT A
+  WHERE   
+  </update>
+  
+  InterfacesChngOnlineStock
+  
+  <update id="updateOrderCountMaster" >
+  UPDATE A
+  SET TOTAL_ORDER_QTY = #{TOTAL_ORDER_QTY}
+  FROM PD_PRODUCT_OPTION A
+  
+  </update>  
+   
+    -->
+    
+    <update id="sampleUpdateStock" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesStockToErp">
+    
+    EXEC LINK_INETOPENDB.INETOPEN.PR_PROCESS_STOCK_ARS_BY_FULLCODE #{maejangCd},#{sangPumFullCd},#{cbcd}
+   
+    </update>
+        
+    
+    
+   
+   	<update id="sampleUpdateStockOrderCount" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesStockToErp">
+		
+		UPDATE A
+			SET ORDERCOUNT = #{orderCount}
+		FROM LINK_INETOPENDB.INETOPEN.IF_STOCK_ARS A
+		WHERE sangPumFullCd = #{sangPumFullCd}
+		and	  maejangCd = #{maejangCd}
+		and	  cbcd = #{cbcd}
+	
+	</update>
+    
+ 
+</mapper>

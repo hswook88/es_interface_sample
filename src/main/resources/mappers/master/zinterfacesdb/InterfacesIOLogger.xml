@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesIOLoggerDao">
+
+	<insert id="insertLogger" parameterType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesIOLogger">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesIOLoggerDao.insertLogger [인터페이스 통신 로그 저장][백인천] */
+		INSERT INTO SAMPLE_INTERFACES_HISTORY (
+			  IF_NAME
+			, IF_INPUT
+			, IF_OUTPUT
+			, INSDATE
+			, SUCCESS_YN
+		) values (
+			  #{ifName}
+			, #{ifInput}
+			, #{ifOutput}
+			, GETDATE()
+			, #{successYn}
+		)
+	</insert>
+
+</mapper>

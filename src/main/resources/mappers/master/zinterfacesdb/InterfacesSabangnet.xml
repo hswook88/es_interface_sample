@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesSabangnetDao">
+
+	<select id="selectAffltsSendItem" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSabangnetSetItem">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesSabangnetDao.selectAffltsSendItem [사방넷에 등록 할 아이템을 조회][백인천] */
+		SELECT
+			  PRODUCT.PRDT_NAME AS goodsNm			/* 상품명 */
+			, '' AS goodsKeyword		/* 상품약어 */
+			, PRODUCT.STYLE_INFO AS modelNm			/* 모델명 */
+			, PRODUCT.STYLE_INFO AS modelNo			/* 모델No */
+			, PRODUCT.BRAND_NAME AS brandNm			/* 브랜드명 */
+			, PRODUCT.PRDT_NO AS companyGoodsCd		/* 자체상품코드 */
+			, NVL(PRODUCT.SRCH_KEY_WORD_TEXT, '') AS goodsSearch	/* 사이트검색어 */
+			, '' AS goodsGubun						/* 상품구분 */
+			, '' AS classCd1						/* 대분류코드 */
+			, '' AS classCd2						/* 중분류코드 */
+			, '' AS classCd3						/* 소분류코드 */
+			, '' AS classCd4						/* 세분류코드 */
+			, '' AS partnerId						/* 매입처ID */
+			, '' AS dPartnerId						/* 물류처ID */
+			, PRODUCT.MNFTR_NAME AS maker			/* 제조사 */
+			, PRODUCT.ORG_NAME AS origin			/* 원산지(제조국) */
+			, '' AS makeYear						/* 생산년도 */
+			, '' AS makeDm							/* 제조일자 */
+			, '7' AS goodsSeason					/* 시즌 */
+			, PRODUCT.GENDER_TYPE AS sex			/* 남녀구분 */
+			, '3' AS status							/* 상품상태 */
+			, '' AS delivAbleRegion					/* 판매지역 */
+			, '1' AS taxYn							/* 세금구분 */
+			, '1' AS delvType						/* 배송비구분 */
+			, '' AS delvCost						/* 배송비(제휴사 정책 확인필요) */
+			, '' AS banpumArea						/* 반품지구분 */
+			, PRODUCT_PRICE.normal_amt AS goodsCost					/* 원가 */
+			, PRODUCT_PRICE.sell_amt AS goodsPrice					/* 판매가 */
+			, PRODUCT_PRICE.sell_amt AS goodsConsumerPrice			/* TAG가(소비자가) */
+			, PRODUCT.CODE_DTL_NAME AS char1Nm							/* 옵션제목(1) */
+			, '' AS char1Val						/* 옵션상세명칭(1) */
+			, '' AS char2Nm							/* 옵션제목(2) */
+			, '' AS char2Val						/* 옵션상세명칭(2) */
+			, PRODUCT_IMAGE.title_image_url AS imgPath	/* 대표이미지 */
+			, PRODUCT_IMAGE.title_image_url AS imgPath1	/* 종합몰(jpg)이미지 */
+			, '' AS imgPath2						/* 부가이미지2 */
+			, PRODUCT_IMAGE.title_image_url AS imgPath3	/* 부가이미지3 */
+			, '' AS imgPath4						/* 부가이미지4 */
+			, '' AS imgPath5						/* 부가이미지5 */
+			, '' AS imgPath6						/* 부가이미지6 */
+			, '' AS imgPath7						/* 부가이미지7 */
+			, '' AS imgPath8						/* 부가이미지8 */
+			, '' AS imgPath9						/* 부가이미지9 */
+			, '' AS imgPath10						/* 부가이미지10 */
+			, '' AS imgPath11						/* 부가이미지11 */
+			, '' AS imgPath12						/* 부가이미지12 */
+			, '' AS imgPath13						/* 부가이미지13 */
+			, '' AS imgPath14						/* 부가이미지14 */
+			, '' AS imgPath15						/* 부가이미지15 */
+			, '' AS imgPath16						/* 부가이미지16 */
+			, '' AS imgPath17						/* 부가이미지17 */
+			, '' AS imgPath18						/* 부가이미지18 */
+			, '' AS imgPath19						/* 부가이미지19 */
+			, '' AS imgPath20						/* 부가이미지20 */
+			, '' AS imgPath21						/* 부가이미지21 */
+			, '' AS imgPath22						/* 부가이미지22 */
+			, '' AS imgPath23						/* 인증서이미지 */
+			, '' AS imgPath24						/* 수입면장이미지 */
+			, PRODUCT.PRDT_DTL_INFO AS goodsRemarks	/* 상품상세설명 */
+			, '' AS certno							/* 인증번호 */
+			, '' AS avlstDm							/* 인증유효시작일 */
+			, '' AS avledDm							/* 인증유효마지막일 */
+			, '' AS issuedate						/* 발급일자 */
+			, '' AS certdate						/* 인증일자 */
+			, '' AS certAgency						/* 인증기관 */
+			, '' AS certfield						/* 인증분야 */
+			, '' AS material						/* 식품재료/원산지 */
+			, PRODUCT.STOCK_MGMT_YN AS stockUseYn	/* 재고관리사용여부 */
+			, '2' AS optType						/* 옵션수정여부 */
+			, '' AS propEditYn						/* 속성수정여부 */
+			, '' AS prop1Cd							/* 속성분류코드*/
+			, '' AS propVal1						/* 속성값1 */
+			, '' AS propVal2						/* 속성값2 */
+			, '' AS propVal3						/* 속성값3 */
+			, '' AS propVal4						/* 속성값4 */
+			, '' AS propVal5						/* 속성값5 */
+			, '' AS propVal6						/* 속성값6 */
+			, '' AS propVal7						/* 속성값7 */
+			, '' AS propVal8						/* 속성값8 */
+			, '' AS propVal9						/* 속성값9 */
+			, '' AS propVal10						/* 속성값10 */
+			, '' AS propVal11						/* 속성값11 */
+			, '' AS propVal12						/* 속성값12 */
+			, '' AS propVal13						/* 속성값13 */
+			, '' AS propVal14						/* 속성값14 */
+			, '' AS propVal15						/* 속성값15 */
+			, '' AS propVal16						/* 속성값16 */
+			, '' AS propVal17						/* 속성값17 */
+			, '' AS propVal18						/* 속성값18 */
+			, '' AS propVal19						/* 속성값19 */
+			, '' AS propVal20						/* 속성값20 */
+			, '' AS propVal21						/* 속성값21 */
+			, '' AS propVal22						/* 속성값22 */
+			, '' AS propVal23						/* 속성값23 */
+			, '' AS propVal24						/* 속성값24 */
+			, '' AS propVal25						/* 속성값25 */
+			, '' AS propVal26						/* 속성값26 */
+			, '' AS propVal27						/* 속성값27 */
+			, '' AS propVal28						/* 속성값28 */
+			, '' AS packCode_str					/* 추가상품그룹코드 */
+			, '' AS goodsNmEn						/* 영문 상품명 */
+			, '' AS goodsNmPr						/* 출력 상품명 */
+			, '' AS goodsRemarks2					/* 추가 상품상세설명_1 */
+			, '' AS goodsRemarks3					/* 추가 상품상세설명_2 */
+			, '' AS goodsRemarks4					/* 추가 상품상세설명_3 */
+			, '' AS importno						/* 수입신고번호 */
+			, '' AS goodsCost2						/* 원가2 */
+			, '' AS origin2							/* 원산지 상세지역 */
+			, '' AS expireDm						/* 유효일자 */
+			, '' AS supplySaveYn					/* 합포제외여부 */
+			, '' AS descrition						/* 관리자메모 */
+		FROM
+			(
+				SELECT 
+					  A.prdt_no
+					, A.prdt_type_code
+					, A.site_no
+					, A.chnnl_no
+					, A.prdt_name
+					, A.eng_prdt_name
+					, A.vndr_no
+					, A.vndr_prdt_no_text
+					, A.mmny_prdt_yn
+					, A.brand_no
+					, A.brand_sort_seq
+					, A.org_place_code
+					, ORG.CODE_DTL_NAME AS ORG_NAME
+					, CASE
+						WHEN GENDER.CODE_DTL_NAME = '10000' THEN '1'
+						WHEN GENDER.CODE_DTL_NAME = '10001' THEN '2'
+						WHEN GENDER.CODE_DTL_NAME = '10003' THEN '3'
+						ELSE '4'
+					  END AS GENDER_TYPE
+					, CASE	
+						WHEN SELLSTAT.CODE_DTL_NO = '10000' THEN '1'
+						WHEN SELLSTAT.CODE_DTL_NO = '10001' THEN '2'
+						WHEN SELLSTAT.CODE_DTL_NO = '10002' THEN '3'
+						WHEN SELLSTAT.CODE_DTL_NO = '10003' THEN '4'
+						ELSE '5'
+					  END AS SELL_STAT_CODE
+					, A.style_info
+					, A.prdt_color_info
+					, A.mnftr_name
+					, A.std_ctgr_no
+					, A.stdr_ctgr_no
+					, A.cntc_prdt_setup_yn
+					, A.rltn_goods_setup_yn
+					, A.add_optn_setup_yn
+					, A.size_chart_disp_yn
+					, A.size_chart_seq
+					, A.emp_dscnt_yn
+					, A.order_mnfct_yn
+					, A.dprc_except_yn
+					, A.store_pickup_psblt_yn
+					, A.free_dlvy_yn
+					, A.stock_intgr_yn
+					, A.stock_un_intgr_rsn_code
+					, A.stock_mgmt_yn
+					, A.buy_limit_yn
+					, A.item_code
+					, A.srch_key_word_text
+					, A.aprv_stat_code
+					, DETAIL.PRDT_DTL_INFO
+					, STANDARD_CATEGORY.std_ctgr_name
+					, CATEGORY.ctgr_name stdr_ctgr_name
+					, BRAND.brand_name
+					, COLOR.CODE_DTL_NAME
+				FROM
+					pd_product A WITH(NOLOCK)
+					LEFT OUTER JOIN (
+						SELECT DTL.PRDT_NO
+							, DTL.DEVICE_CODE
+							, DTL.PRDT_DTL_INFO
+							, CLR.PRDT_COLOR_CODE
+						FROM PD_PRODUCT_DETAIL DTL 
+							LEFT OUTER JOIN PD_PRODUCT_COLOR CLR ON DTL.PRDT_NO = CLR.PRDT_NO
+					) DETAIL ON A.PRDT_NO = DETAIL.PRDT_NO AND DETAIL.DEVICE_CODE = '10000'
+					LEFT OUTER JOIN sy_standard_category STANDARD_CATEGORY WITH(NOLOCK) ON A.std_ctgr_no = STANDARD_CATEGORY.std_ctgr_no
+					LEFT OUTER JOIN dp_category CATEGORY WITH(NOLOCK) ON A.stdr_ctgr_no = CATEGORY.ctgr_no
+					LEFT OUTER JOIN dp_brand BRAND WITH(NOLOCK) ON A.brand_no = BRAND.brand_no
+					LEFT OUTER JOIN vd_vendor VENDOR WITH(NOLOCK) ON A.vndr_no = VENDOR.vndr_no
+					LEFT OUTER JOIN SY_CODE_DETAIL ORG ON A.ORG_PLACE_CODE = ORG.CODE_DTL_NO AND ORG.CODE_FIELD = 'ORG_PLACE_CODE'
+					LEFT OUTER JOIN SY_CODE_DETAIL GENDER ON A.GENDER_GBN_CODE = GENDER.CODE_DTL_NO AND GENDER.CODE_FIELD = 'GENDER_GBN_CODE'
+					LEFT OUTER JOIN SY_CODE_DETAIL SELLSTAT ON A.SELL_STAT_CODE = SELLSTAT.CODE_DTL_NO AND SELLSTAT.CODE_FIELD = 'SELL_STAT_CODE'
+					LEFT OUTER JOIN SY_CODE_DETAIL COLOR ON DETAIL.PRDT_COLOR_CODE = COLOR.CODE_DTL_NO AND COLOR.CODE_FIELD = 'PRDT_COLOR_CODE'
+				WHERE A.prdt_type_code NOT IN ('10003', '10004')
+					AND A.aprv_stat_code = '10004' 
+					AND A.DISP_YN = 'Y'
+					AND A.AFFLTS_SEND_YN = 'Y'
+			) PRODUCT LEFT OUTER JOIN (
+				SELECT
+					  prdt_no
+					, NVL(image_name, '') title_image_name
+					, NVL(image_path_text, '') title_image_path_text
+					, NVL(image_url, '') title_image_url
+					, NVL(altrn_text, '') title_image_altrn_text
+				FROM
+					pd_product_relation_file
+				WHERE
+					prdt_rltn_file_seq = 1
+					AND disp_postn_type = 'P'
+					AND file_type = 'I'
+			) PRODUCT_IMAGE ON PRODUCT.prdt_no = PRODUCT_IMAGE.prdt_no
+			LEFT OUTER JOIN (
+				SELECT
+					  PRODUCT_PRICE_HISTORY.prdt_no
+					, NVL(PRODUCT_PRICE_HISTORY.normal_amt, 0) normal_amt
+					, NVL(PRODUCT_PRICE_HISTORY.sell_amt, 0) sell_amt
+					, NVL(PRODUCT_PRICE_HISTORY.erp_dscnt_rate, 0) erp_dscnt_rate
+					, NVL(PRODUCT_PRICE_HISTORY.onln_dscnt_rate, 0) onln_dscnt_rate
+					, NVL(PRODUCT_PRICE_HISTORY.emp_dscnt_rate, 0) emp_dscnt_rate
+				FROM
+					(
+						SELECT
+							  prdt_no
+							, MAX(prdt_price_hist_seq) max_seq
+						FROM
+							pd_product_price_history WITH(NOLOCK)
+						WHERE
+							SYSDATE <![CDATA[>=]]> apply_start_dtm
+							AND SYSDATE <![CDATA[<=]]> apply_end_dtm
+						GROUP BY
+							prdt_no
+					) PRODUCT_PRICE_HISTORY_MAX LEFT JOIN (
+						SELECT
+							  prdt_no
+							, prdt_price_hist_seq
+							, apply_start_dtm
+							, apply_end_dtm
+							, normal_amt
+							, sell_amt
+							, erp_dscnt_rate
+							, onln_dscnt_rate
+							, emp_dscnt_rate
+						FROM
+							pd_product_price_history WITH(NOLOCK)
+					) PRODUCT_PRICE_HISTORY ON PRODUCT_PRICE_HISTORY_MAX.prdt_no = PRODUCT_PRICE_HISTORY.prdt_no AND PRODUCT_PRICE_HISTORY_MAX.max_seq = PRODUCT_PRICE_HISTORY.prdt_price_hist_seq
+			) PRODUCT_PRICE ON PRODUCT.prdt_no = PRODUCT_PRICE.prdt_no
+	</select>
+
+
+	<select id="selectAffltsSendItem2" resultType="kr.co.shop.interfaces.zinterfacesdb.model.master.InterfacesSabangnetSetItem2">
+		/*+ kr.co.shop.interfaces.zinterfacesdb.repository.master.InterfacesSabangnetDao.selectAffltsSendItem2 [사방넷에 등록 할 아이템을 조회 - 요약정보][백인천] */
+		SELECT 
+			  prdt_name AS goodsNm
+			, prdt_no AS companyGoodsCd
+			, '2' AS status
+			, '1000' AS goodsCost
+			, '1000' AS goodsPrice
+			, '1000' AS goodsConsumerPrice
+		FROM PD_PRODUCT
+		WHERE 1 = 1
+			AND DISP_YN = 'Y'
+			AND AFFLTS_SEND_YN = 'Y'
+	</select>
+
+</mapper>
